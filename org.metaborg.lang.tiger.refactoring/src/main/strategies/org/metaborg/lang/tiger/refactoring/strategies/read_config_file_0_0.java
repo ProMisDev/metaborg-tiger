@@ -1,6 +1,5 @@
 package org.metaborg.lang.tiger.refactoring.strategies;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -47,8 +46,11 @@ public class read_config_file_0_0 extends Strategy {
 		try (InputStream input = fileObject.getContent().getInputStream()) {
 			Properties prop = new Properties();
 			prop.load(input);
-
-			return prop.getProperty("refactoring.rename");
+		    String property = prop.getProperty("refactoring.rename");
+		    if (property == null || property.isEmpty()) {
+		    	throw new IllegalArgumentException("Property 'refactoring.rename' is not defined.");
+		    }
+			return property;
 
 		} catch (IOException ex) {
 			throw new IllegalArgumentException("Invalid porperty file URI: " + fileObject.getPublicURIString());

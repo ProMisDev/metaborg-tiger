@@ -13,6 +13,7 @@ rules // menu action strategies
     	analysis := <nabl2-get-ast-analysis> ast;
       <not(nabl2-analysis-has-errors)> analysis
     with
+    // TODO renaming from references doesn't work anymore
       filename := <guarantee-extension(|"refactored.tig")> path
     ; <ppdebug(|"MAIN - New file name: ")> filename
     ; <ppdebug(|"MAIN - Selected node: ")> selected-id

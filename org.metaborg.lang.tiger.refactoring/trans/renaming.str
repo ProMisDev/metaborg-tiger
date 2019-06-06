@@ -14,11 +14,13 @@ rules // menu action strategies
       <not(nabl2-analysis-has-errors)> analysis
     with
       filename := <guarantee-extension(|"refactored.tig")> path
+    ; <ppdebug(|"MAIN - New file name: ")> filename
     ; <ppdebug(|"MAIN - Selected node: ")> selected-id
     ; target-dec-occ := <collect-one(get-declaration(|analysis, selected-id)) > ast
     ; <ppdebug(|"MAIN - Target dec occ: ")> target-dec-occ
-    ; target-name := <read-config-file> selected-id
-    ; old-ref-count := <occurrences(rename(|analysis, target-dec-occ, target-name))> ast
+    ; <ppdebug(|"MAIN - Config file name: ")> $[[project-path]/[path].rfac]
+		; target-name := <read-config-file> $[[project-path]/[path].rfac]    
+		; old-ref-count := <occurrences(rename(|analysis, target-dec-occ, target-name))> ast
     ; <ppdebug(|"MAIN - Old ref count: ")> old-ref-count
     ; renamed-ast := <topdown(try(rename(|analysis, target-dec-occ, target-name)))> ast
     ; (new-renamed-ast, new-analysis, _, _, _) := <nabl2-analyze-ast(|path)>renamed-ast

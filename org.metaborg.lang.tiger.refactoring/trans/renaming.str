@@ -18,22 +18,37 @@ rules // menu action strategies
     ; target-dec-occ := <collect-one(get-declaration(|analysis, selected-id)) > ast
     ; <ppdebug(|"MAIN - Target dec occ: ")> target-dec-occ
     ; target-name := <read-config-file> selected-id
-    ; result := <topdown(try(rename(|analysis, target-dec-occ, target-name))); pp-Tiger-string> ast
+    ; old-ref-count := <occurrences(rename(|analysis, target-dec-occ, target-name))> ast
+    ; <ppdebug(|"MAIN - Old ref count: ")> old-ref-count
+    ; renamed-ast := <topdown(try(rename(|analysis, target-dec-occ, target-name)))> ast
+    ; (new-renamed-ast, new-analysis, _, _, _) := <nabl2-analyze-ast(|path)>renamed-ast
+    ; new-target-name := <nabl2-copy-ast-index(|selected-id)> target-name
+    ; target-namespace := <nabl2-get-occurrence-ns> target-dec-occ
+    ; new-target-dec-occ := <nabl2-mk-occurrence(|target-namespace, selected-id)> new-target-name
+    ; new-ref-count := <occurrences(rename(|new-analysis, new-target-dec-occ, "_invalid"))> new-renamed-ast
+    ; <ppdebug(|"MAIN - New ref count: ")> new-ref-count 
+    ; <?old-ref-count> new-ref-count 
+    ; result := <pp-Tiger-string> renamed-ast
     
 rules //rename    
 
 	//Variable
-  rename(|analysis, target-dec-occ, target-name): VarDecNoType(name, exp) -> VarDecNoType(target-name, exp)
+  rename(|analysis, target-dec-occ, target-name): VarDecNoType(name, exp) -> VarDecNoType(new-name, exp)
 	where
 	 check-dec-occ(|"Var", name, target-dec-occ)
+	 ; new-name := <nabl2-copy-ast-index(|name)> target-name
+
   		
-  rename(|analysis, target-dec-occ, target-name): VarDec(name, type, exp) -> VarDec(target-name, type, exp)
+  rename(|analysis, target-dec-occ, target-name): VarDec(name, type, exp) -> VarDec(new-name, type, exp)
 	where
 		check-dec-occ(|"Var", name, target-dec-occ)
+		; new-name := <nabl2-copy-ast-index(|name)> target-name
   		
-  rename(|analysis, target-dec-occ, target-name): Var(name) -> Var(target-name)
+  rename(|analysis, target-dec-occ, target-name): Var(name) -> Var(new-name)
 	where
-    check-ref-occ(|analysis, "Var", name, target-dec-occ)
+   check-ref-occ(|analysis, "Var", name, target-dec-occ)
+   ; new-name := <nabl2-copy-ast-index(|name)> target-name
+
     
   //Type
   rename(|analysis, target-dec-occ, target-name): TypeDec(name, type) -> TypeDec(target-name, type)
@@ -151,7 +166,7 @@ rules // Utility functions
     ; <?dec-occ> target-dec-occ
     
   check-dec-occ(|namespace, name, target-dec-occ) =
-		occ-name := <nabl2-get-occurrence-name> target-dec-occ
+		occ-name := <nabl2-get-occurrence-name> target-dec-occ		
 		; <eq> (<strip-annos> occ-name, <strip-annos> name) 
     ; dec-occ := <nabl2-mk-occurrence(|namespace)> name
   	; <?dec-occ> target-dec-occ

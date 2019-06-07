@@ -26,7 +26,7 @@ rules // menu action strategies
     ; indexed-target-name := <nabl2-get-occurrence-name> target-dec-occ
     ; new-target-name := <nabl2-copy-ast-index(|indexed-target-name)> target-name
     ; target-namespace := <nabl2-get-occurrence-ns> target-dec-occ
-    ; new-target-dec-occ := <nabl2-mk-occurrence(|target-namespace, selected-id)> new-target-name
+    ; new-target-dec-occ := <nabl2-mk-occurrence(|target-namespace)> new-target-name
     ; <ppdebug(|"MAIN - New target dec occ: ")> new-target-dec-occ
     ; new-ref-count := <occurrences(rename(|new-analysis, new-target-dec-occ, "_invalid"))> new-renamed-ast
     ; <ppdebug(|"MAIN - New ref count: ")> new-ref-count 

@@ -15,22 +15,22 @@ rules // menu action strategies
     with
     // TODO renaming from references doesn't work anymore
       filename := <guarantee-extension(|"refactored.tig")> path
-    ; <ppdebug(|"MAIN - New file name: ")> filename
-    ; <ppdebug(|"MAIN - Selected node: ")> selected-id
     ; target-dec-occ := <collect-one(get-declaration(|analysis, selected-id)) > ast
     ; <ppdebug(|"MAIN - Target dec occ: ")> target-dec-occ
-    ; <ppdebug(|"MAIN - Config file name: ")> $[[project-path]/[path].rfac]
 		; target-name := <read-config-file> $[[project-path]/[path].rfac]    
-		; old-ref-count := <occurrences(rename(|analysis, target-dec-occ, target-name))> ast
-    ; <ppdebug(|"MAIN - Old ref count: ")> old-ref-count
+		; old-occ-count := <occurrences(rename(|analysis, target-dec-occ, target-name))> ast
+    ; <ppdebug(|"MAIN - Old ref count: ")> old-occ-count
     ; renamed-ast := <topdown(try(rename(|analysis, target-dec-occ, target-name)))> ast
-    ; (new-renamed-ast, new-analysis, _, _, _) := <nabl2-analyze-ast(|path)>renamed-ast
-    ; new-target-name := <nabl2-copy-ast-index(|selected-id)> target-name
+    
+    ; (new-renamed-ast, new-analysis, _, _, _) := <nabl2-analyze-ast(|path)> renamed-ast
+    ; indexed-target-name := <nabl2-get-occurrence-name> target-dec-occ
+    ; new-target-name := <nabl2-copy-ast-index(|indexed-target-name)> target-name
     ; target-namespace := <nabl2-get-occurrence-ns> target-dec-occ
     ; new-target-dec-occ := <nabl2-mk-occurrence(|target-namespace, selected-id)> new-target-name
+    ; <ppdebug(|"MAIN - New target dec occ: ")> new-target-dec-occ
     ; new-ref-count := <occurrences(rename(|new-analysis, new-target-dec-occ, "_invalid"))> new-renamed-ast
     ; <ppdebug(|"MAIN - New ref count: ")> new-ref-count 
-    ; <?old-ref-count> new-ref-count 
+    ; <?old-occ-count> new-ref-count 
     ; result := <pp-Tiger-string> renamed-ast
     
 rules //rename    

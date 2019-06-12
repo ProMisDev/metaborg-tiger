@@ -28,7 +28,10 @@ rules // menu action strategies
       filename := <guarantee-extension(|"refactored.tig")> path
       ; target-dec-occ := <collect-one(get-function-declaration(|analysis, selected-id)) > ast
       ; (params, body) := <collect-one(get-function(|target-dec-occ))> ast
-      ; inlined-ast := <topdown(try(replace-call(|analysis, target-dec-occ, body, params)))> ast   
+      ; <ppdebug0> "MAIN - Get Function Dec" 
+      ; <not(collect-one(get-function(|target-dec-occ)))> body //recursive function detection
+      ; inlined-ast := <topdown(try(replace-call(|analysis, target-dec-occ, body, params)))> ast  
+      ; <ppdebug0> "MAIN - Inline Call" 
       ; result := <topdown(try(delete-function(|target-dec-occ))); pp-Tiger-string> inlined-ast    
        
       

@@ -1,0 +1,18 @@
+module renaming
+
+language TigerRefactoring
+
+
+test rename variable without type [[
+let
+	var msg := "Hello World"
+in 
+	print(msg)
+end
+]] run rename-test-var-no-type to [[
+let
+	var message := "Hello World"
+in 
+	print(message)
+end
+]]

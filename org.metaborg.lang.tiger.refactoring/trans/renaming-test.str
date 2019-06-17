@@ -20,7 +20,7 @@ rules // rules called by spt
       ; target-dec := VarDecNoType(old-name, Nil())
     	; target-dec-occ := <collect-one(get-declaration-test(|old-name, "Var"))> ast
     	; (old-occ-count, renamed-ast) := <exec-rename(|analysis, target-dec-occ, new-name)> ast
-    	; check_capture(|renamed-ast, target-dec-occ, new-name, old-occ-count, path)
+    	; check-capture(|renamed-ast, target-dec-occ, new-name, old-occ-count, path)
     	
   rename-test-var-capture : ast -> renamed-ast
     where
@@ -33,7 +33,7 @@ rules // rules called by spt
       ; target-dec := VarDecNoType(old-name, Nil())
     	; target-dec-occ := <collect-one(get-declaration-test(|old-name, "Var"))> ast
     	; (old-occ-count, renamed-ast) := <exec-rename(|analysis, target-dec-occ, new-name)> ast
-    	; not(check_capture(|renamed-ast, target-dec-occ, new-name, old-occ-count, path))
+    	; not(check-capture(|renamed-ast, target-dec-occ, new-name, old-occ-count, path))
     	
   rename-test-type : ast -> renamed-ast
     where
@@ -46,7 +46,7 @@ rules // rules called by spt
       ; target-dec := TypeDec(old-name, Nil())
     	; target-dec-occ := <collect-one(get-declaration-test(|old-name, "Type"))> ast
     	; (old-occ-count, renamed-ast) := <exec-rename(|analysis, target-dec-occ, new-name)> ast
-    	; check_capture(|renamed-ast, target-dec-occ, new-name, old-occ-count, path)
+    	; check-capture(|renamed-ast, target-dec-occ, new-name, old-occ-count, path)
     	
   rename-test-field : ast -> renamed-ast
     where
@@ -59,8 +59,60 @@ rules // rules called by spt
       ; target-dec := Field(old-name, Nil())
     	; target-dec-occ := <collect-one(get-declaration-test(|old-name, "Field"))> ast
     	; (old-occ-count, renamed-ast) := <exec-rename(|analysis, target-dec-occ, new-name)> ast
-    	; check_capture(|renamed-ast, target-dec-occ, new-name, old-occ-count, path)
-    
+    	; check-capture(|renamed-ast, target-dec-occ, new-name, old-occ-count, path)
+ 
+  rename-test-function : ast -> renamed-ast
+    where
+    	analysis := <nabl2-get-ast-analysis> ast
+      ; <not(nabl2-analysis-has-errors)> analysis
+    with
+      old-name := "plus"
+      ; new-name := "add"
+      ; path := "test/renaming/functions.spt"
+      ; target-dec := FunDec(old-name, [], Nil(), [])
+    	; target-dec-occ := <collect-one(get-declaration-test(|old-name, "Var"))> ast
+    	; (old-occ-count, renamed-ast) := <exec-rename(|analysis, target-dec-occ, new-name)> ast
+    	; check-capture(|renamed-ast, target-dec-occ, new-name, old-occ-count, path)   
+    	
+  rename-test-procedure : ast -> renamed-ast
+    where
+    	analysis := <nabl2-get-ast-analysis> ast
+      ; <not(nabl2-analysis-has-errors)> analysis
+    with
+      old-name := "printnl"
+      ; new-name := "printNewLine"
+      ; path := "test/renaming/functions.spt"
+      ; target-dec := ProcDec(old-name, [], [])
+    	; target-dec-occ := <collect-one(get-declaration-test(|old-name, "Var"))> ast
+    	; (old-occ-count, renamed-ast) := <exec-rename(|analysis, target-dec-occ, new-name)> ast
+    	; check-capture(|renamed-ast, target-dec-occ, new-name, old-occ-count, path)  
+
+  rename-test-farg : ast -> renamed-ast
+    where
+    	analysis := <nabl2-get-ast-analysis> ast
+      ; <not(nabl2-analysis-has-errors)> analysis
+    with
+      old-name := "x"
+      ; new-name := "text"
+      ; path := "test/renaming/functions.spt"
+      ; target-dec := FArg(old-name, Nil())
+    	; target-dec-occ := <collect-one(get-declaration-test(|old-name, "Var"))> ast
+    	; (old-occ-count, renamed-ast) := <exec-rename(|analysis, target-dec-occ, new-name)> ast
+    	; check-capture(|renamed-ast, target-dec-occ, new-name, old-occ-count, path)  
+    	
+  rename-test-farg-capture : ast -> renamed-ast
+    where
+    	analysis := <nabl2-get-ast-analysis> ast
+      ; <not(nabl2-analysis-has-errors)> analysis
+    with
+      old-name := "d"
+      ; new-name := "a"
+      ; path := "test/renaming/functions.spt"
+      ; target-dec := FArg(old-name, Nil())
+    	; target-dec-occ := <collect-one(get-declaration-test(|old-name, "Var"))> ast
+    	; (old-occ-count, renamed-ast) := <exec-rename(|analysis, target-dec-occ, new-name)> ast
+    	; not(check-capture(|renamed-ast, target-dec-occ, new-name, old-occ-count, path))
+
 rules
 	exec-rename(|analysis, target-dec-occ, new-name): ast -> (old-occ-count, renamed-ast)
 	 where
@@ -68,7 +120,7 @@ rules
     	; renamed-ast := <topdown(try(rename(|analysis, target-dec-occ, new-name)))> ast
     	
 rules
-  check_capture(|renamed-ast, target-dec-occ, new-name, old-occ-count, path) =
+  check-capture(|renamed-ast, target-dec-occ, new-name, old-occ-count, path) =
   		(new-renamed-ast, new-analysis, _, _, _) := <nabl2-analyze-ast(|path)> renamed-ast
 		  ; indexed-target-name := <nabl2-get-occurrence-name> target-dec-occ
 		  ; new-target-name := <nabl2-copy-ast-index(|indexed-target-name)> new-name
@@ -94,6 +146,21 @@ rules
     ; dec-occ := <nabl2-mk-occurrence(|namespace)> name
     
   get-declaration-test(|target-name, namespace): Field(name, type) -> dec-occ
+	where
+		<eq> (<strip-annos> target-name, <strip-annos> name) 
+    ; dec-occ := <nabl2-mk-occurrence(|namespace)> name
+    
+  get-declaration-test(|target-name, namespace): FunDec(name, args, type, body) -> dec-occ
+	where
+		<eq> (<strip-annos> target-name, <strip-annos> name) 
+    ; dec-occ := <nabl2-mk-occurrence(|namespace)> name
+    
+  get-declaration-test(|target-name, namespace): ProcDec(name, args, body) -> dec-occ
+	where
+		<eq> (<strip-annos> target-name, <strip-annos> name) 
+    ; dec-occ := <nabl2-mk-occurrence(|namespace)> name
+    
+  get-declaration-test(|target-name, namespace): FArg(name, type) -> dec-occ
 	where
 		<eq> (<strip-annos> target-name, <strip-annos> name) 
     ; dec-occ := <nabl2-mk-occurrence(|namespace)> name

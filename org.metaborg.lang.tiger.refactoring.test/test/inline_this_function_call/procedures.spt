@@ -1,0 +1,51 @@
+module inline-functions
+
+language TigerRefactoring
+
+
+test inline procedure call [[
+let 
+	function printnl(x : string) = (
+		print(x); 
+		print("\n")
+	)
+in
+   	printnl("Hello World")
+end
+]] run inline-call-proc-test to [[
+let
+  function printnl(x : string) =
+    (
+      print(x);
+      print("\n")
+    )
+ in
+  let
+    var x : string := "Hello World"
+   in
+    (
+      print(x);
+      print("\n")
+    )
+  end
+end
+]]
+
+test inline procedure call no args [[
+let 
+	function helloWorld() = 
+		print("Hello World")
+in
+   	helloWorld()
+end
+]] run inline-call-proc-test-no-args to [[
+let
+  function helloWorld( ) =
+    print("Hello World")
+ in
+  let
+   in
+    print("Hello World")
+  end
+end
+]]

@@ -52,7 +52,6 @@ rules //replace-this-call
   replace-this-call(|select-id, body, params): Call(name, args) -> Let(vars, [body])
   where
   	<?select-id> name
-  	; <ppdebug0> "Found"
   	; vars := <zip(create-var-dec)> (params, args)
   	
 rules //replace-call

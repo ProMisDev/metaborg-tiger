@@ -1,0 +1,37 @@
+module inline-functions
+
+language TigerRefactoring
+
+
+test inline function call [[
+let 
+	function printnl(x : string) = (
+		print(x); 
+		print("\n")
+	)
+in
+   	printnl("Hello World");
+   	printnl("Hello World")
+end
+]] run inline-function-test to [[
+let
+  
+ in
+  let
+    var x : string := "Hello World"
+   in
+    (
+      print(x);
+      print("\n")
+    )
+  end;
+  let
+    var x : string := "Hello World"
+   in
+    (
+      print(x);
+      print("\n")
+    )
+  end
+end
+]]

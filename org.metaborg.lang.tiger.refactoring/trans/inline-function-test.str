@@ -29,6 +29,20 @@ rules // rules called by spt
     where
       result := <exec-inline-call-test(|"helloWorld")> ast
       
+	inline-function-test : ast -> result
+    where
+    	analysis := <nabl2-get-ast-analysis> ast;
+      <not(nabl2-analysis-has-errors)> analysis
+    with
+      target-call := <collect-one(get-call-test(|"printnl"))> ast
+      ; <ppdebug0> target-call
+      ; (params, body, target-dec-occ) := <exec-get-function(|analysis, target-call)> ast
+      //recursive function detection
+      ; <not(collect-one(replace-call(|analysis, target-dec-occ, body, params)))> body 
+      ; inlined-ast := <topdown(try(replace-call(|analysis, target-dec-occ, body, params)))> ast  
+      ; result := <topdown(try(delete-function(|target-dec-occ)))> inlined-ast 
+      ; <ppdebugna0> result
+      
 rules
 	exec-inline-call-test(|functionName) : ast -> result
     where

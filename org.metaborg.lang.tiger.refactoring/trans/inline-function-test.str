@@ -36,9 +36,8 @@ rules
       <not(nabl2-analysis-has-errors)> analysis
     with
       target-call := <collect-one(get-call-test(|functionName))> ast
-      ; target-dec-occ := <collect-one(get-function-declaration(|analysis, target-call)) > ast
-      ; (params, body) := <collect-one(get-function(|target-dec-occ))> ast
-      ; result := <oncetd(replace-this-call(|target-call, body, params))> ast
+      ; (params, body, target-dec-occ) := <exec-get-function(|analysis, target-call)> ast
+      ; result := <inline-this-function-call(|target-call, body, params)> ast
 
 rules
   get-call-test(|target-name): Call(name, args) -> name

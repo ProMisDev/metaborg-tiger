@@ -1,0 +1,30 @@
+module inline-functions
+
+language TigerRefactoring
+
+
+test inline function call [[
+let 
+	function plus(a : int, b:int) : int = (
+		a + b
+	)
+in
+   	plus(1,2)
+end
+]] run inline-call-test to [[
+let
+  function plus(a : int, b : int) : int =
+    (
+      a + b
+    )
+ in
+  let
+    var a : int := 1
+    var b : int := 2
+   in
+    (
+      a + b
+    )
+  end
+end
+]]

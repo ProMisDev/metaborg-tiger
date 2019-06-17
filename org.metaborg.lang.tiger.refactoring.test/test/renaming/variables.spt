@@ -1,4 +1,4 @@
-module renaming
+module renaming-variables
 
 language TigerRefactoring
 
@@ -9,7 +9,7 @@ let
 in 
 	print(msg)
 end
-]] run rename-test-var-no-type to [[
+]] run rename-test-var to [[
 let
 	var message := "Hello World"
 in 
@@ -24,7 +24,7 @@ in
 	print(msg)
 end
 
-]] run rename-test-var-no-type to [[
+]] run rename-test-var to [[
 let
 	var message : string := "Hello World"
 in 

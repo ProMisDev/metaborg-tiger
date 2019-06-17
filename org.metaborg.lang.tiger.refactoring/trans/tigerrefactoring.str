@@ -9,6 +9,7 @@ imports
   desugar
   renaming
   inline-function
+  renaming-test
 
 
   nabl2/runtime/analysis/debug

@@ -9,14 +9,14 @@ imports
 	
 
 rules // menu action strategies
-  rename-test-var-no-type : ast -> renamed-ast
+  rename-test-var : ast -> renamed-ast
     where
     	analysis := <nabl2-get-ast-analysis> ast
       ; <not(nabl2-analysis-has-errors)> analysis
     with
       old-name := "msg"
       ; new-name := "message"
-      ; path := "test/renaming.spt"
+      ; path := "test/renaming/variables.spt"
       ; target-dec := VarDecNoType(old-name, Nil())
     	; target-dec-occ := <collect-one(get-declaration-test(|old-name, "Var"))> ast
     	; (old-occ-count, renamed-ast) := <exec-rename(|analysis, target-dec-occ, new-name)> ast
@@ -29,7 +29,7 @@ rules // menu action strategies
     with
       old-name := "y"
       ; new-name := "x"
-      ; path := "test/renaming.spt"
+      ; path := "test/renaming/variables.spt"
       ; target-dec := VarDecNoType(old-name, Nil())
     	; target-dec-occ := <collect-one(get-declaration-test(|old-name, "Var"))> ast
     	; (old-occ-count, renamed-ast) := <exec-rename(|analysis, target-dec-occ, new-name)> ast

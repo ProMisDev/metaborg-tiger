@@ -112,22 +112,6 @@ rules // rules called by spt
     	; target-dec-occ := <collect-one(get-declaration-test(|old-name, "Var"))> ast
     	; (old-occ-count, renamed-ast) := <exec-rename(|analysis, target-dec-occ, new-name)> ast
     	; not(check-capture(|renamed-ast, target-dec-occ, new-name, old-occ-count, path))
-
-rules
-	exec-rename(|analysis, target-dec-occ, new-name): ast -> (old-occ-count, renamed-ast)
-	 where
-	    old-occ-count := <occurrences(rename(|analysis, target-dec-occ, new-name))> ast
-    	; renamed-ast := <topdown(try(rename(|analysis, target-dec-occ, new-name)))> ast
-    	
-rules
-  check-capture(|renamed-ast, target-dec-occ, new-name, old-occ-count, path) =
-  		(new-renamed-ast, new-analysis, _, _, _) := <nabl2-analyze-ast(|path)> renamed-ast
-		  ; indexed-target-name := <nabl2-get-occurrence-name> target-dec-occ
-		  ; new-target-name := <nabl2-copy-ast-index(|indexed-target-name)> new-name
-		  ; target-namespace := <nabl2-get-occurrence-ns> target-dec-occ
-		  ; new-target-dec-occ := <nabl2-mk-occurrence(|target-namespace)> new-target-name
-		  ; new-ref-count := <occurrences(rename(|new-analysis, new-target-dec-occ, "_invalid"))> new-renamed-ast
-		  ; <?old-occ-count> new-ref-count 
 		  
 rules
 	get-declaration-test(|target-name, namespace): VarDecNoType(name, exp) -> dec-occ

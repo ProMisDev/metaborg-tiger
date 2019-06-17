@@ -1,0 +1,108 @@
+module inline-functions
+
+language TigerRefactoring
+
+
+test inline function call [[
+let 
+	function plus(a : int, b:int) : int = (
+		a + b
+	)
+in
+   	plus(1,2)
+end
+]] run inline-call-test to [[
+let
+  function plus(a : int, b : int) : int =
+    (
+      a + b
+    )
+ in
+  let
+    var a : int := 1
+    var b : int := 2
+   in
+    (
+      a + b
+    )
+  end
+end
+]]
+
+test inline function call no args [[
+let 
+	function zero() : int = 0
+in
+   	zero()
+end
+]] run inline-call-test-no-args to [[
+let
+  function zero( ) : int =
+    0
+ in
+  let
+   in
+    0
+  end
+end
+]]
+
+test inline function side effects [[
+let 
+	function square(x : int): int = (
+	 print("Log square");
+		x * x
+	)
+in
+   	square((print("Hello");2))
+end
+]] run inline-call-test-side-effects to [[
+let
+  function square(x : int) : int =
+    (
+      print("Log square");
+      x * x
+    )
+ in
+  let
+    var x : int := (
+      print("Hello");
+      2
+    )
+   in
+    (
+      print("Log square");
+      x * x
+    )
+  end
+end
+]]
+
+test inline function mutual recursion [[
+let 
+  var sum: int := 0
+	function plus(a : int, b:int) : int = (
+		a + b
+	)
+	
+in
+   	sum = plus(1,2)
+end
+]] run inline-call-test to [[
+let
+  var sum : int := 0
+  function plus(a : int, b : int) : int =
+    (
+      a + b
+    )
+ in
+  sum = let
+    var a : int := 1
+    var b : int := 2
+   in
+    (
+      a + b
+    )
+  end
+end
+]]

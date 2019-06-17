@@ -11,14 +11,35 @@ imports
 rules // rules called by spt
   inline-call-test : ast -> result
     where
+     result := <exec-inline-call-test(|"plus")> ast
+      
+  inline-call-test-no-args : ast -> result
+    where
+    	result := <exec-inline-call-test(|"zero")> ast
+      
+  inline-call-test-side-effects : ast -> result
+    where
+    	result := <exec-inline-call-test(|"square")> ast
+      
+  inline-call-proc-test : ast -> result
+    where
+    	result := <exec-inline-call-test(|"printnl")> ast
+      
+  inline-call-proc-test-no-args : ast -> result
+    where
+      result := <exec-inline-call-test(|"helloWorld")> ast
+      
+rules
+	exec-inline-call-test(|functionName) : ast -> result
+    where
     	analysis := <nabl2-get-ast-analysis> ast;
       <not(nabl2-analysis-has-errors)> analysis
     with
-      target-call := <collect-one(get-call-test(|"plus"))> ast
+      target-call := <collect-one(get-call-test(|functionName))> ast
       ; target-dec-occ := <collect-one(get-function-declaration(|analysis, target-call)) > ast
       ; (params, body) := <collect-one(get-function(|target-dec-occ))> ast
       ; result := <oncetd(replace-this-call(|target-call, body, params))> ast
-      
+
 rules
   get-call-test(|target-name): Call(name, args) -> name
 	where

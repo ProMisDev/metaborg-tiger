@@ -18,55 +18,44 @@ rules // menu action strategies
       ; new-name := "message"
       ; target-dec := VarDecNoType(old-name, Nil())
     	; target-dec-occ := <collect-one(get-declaration-test(|old-name, "Var"))> ast
-    	; old-occ-count := <occurrences(rename(|analysis, target-dec-occ, new-name))> ast
-    	; renamed-ast := <topdown(try(rename(|analysis, target-dec-occ, new-name)))> ast
-    	; <ppdebug0> "--------------------------------------------------------------------"
-		  ; (new-renamed-ast, new-analysis, _, _, _) := <nabl2-analyze-ast(|"renaming.spt")> renamed-ast
-		  ; indexed-target-name := <nabl2-get-occurrence-name> target-dec-occ
-		  ; new-target-name := <nabl2-copy-ast-index(|indexed-target-name)> new-name
-		  ; target-namespace := <nabl2-get-occurrence-ns> target-dec-occ
-		  ; new-target-dec-occ := <nabl2-mk-occurrence(|target-namespace)> new-target-name
-		  ; new-ref-count := <occurrences(rename(|new-analysis, new-target-dec-occ, "_invalid"))> new-renamed-ast
-		  ; <ppdebug0> old-occ-count
-		  ; <ppdebug1> new-ref-count
-		/*    ; (new-renamed-ast, new-analysis, _, _, _) := <nabl2-analyze-ast(|"")> renamed-ast
-    ; indexed-target-name := <nabl2-get-occurrence-name> target-dec-occ
-    ; new-target-name := <nabl2-copy-ast-index(|indexed-target-name)> target-name
-    ; target-namespace := <nabl2-get-occurrence-ns> target-dec-occ
-    ; new-target-dec-occ := <nabl2-mk-occurrence(|target-namespace)> new-target-name
-    ; <ppdebug(|"MAIN - New target dec occ: ")> new-target-dec-occ
-    ; new-ref-count := <occurrences(rename(|new-analysis, new-target-dec-occ, "_invalid"))> new-renamed-ast
-    ; <ppdebug(|"MAIN - New ref count: ")> new-ref-count 
-    ; <?old-occ-count> new-ref-count 
-    ; result := <pp-Tiger-string> renamed-ast  ; <?old-occ-count> new-ref-count 
-   		; result := <pp-Tiger-string> renamed-ast
-    
-    ; target-dec-occ := <collect-one(get-declaration(|analysis, selected-id)) > ast
-    ; <ppdebug(|"MAIN - Target dec occ: ")> target-dec-occ
-		; target-name := "foo"  
-		; old-occ-count := <occurrences(rename(|analysis, target-dec-occ, target-name))> ast
-    ; <ppdebug(|"MAIN - Old ref count: ")> old-occ-count
-    ; renamed-ast := <topdown(try(rename(|analysis, target-dec-occ, target-name)))> ast
-    
-    ; (new-renamed-ast, new-analysis, _, _, _) := <nabl2-analyze-ast(|"")> renamed-ast
-    ; indexed-target-name := <nabl2-get-occurrence-name> target-dec-occ
-    ; new-target-name := <nabl2-copy-ast-index(|indexed-target-name)> target-name
-    ; target-namespace := <nabl2-get-occurrence-ns> target-dec-occ
-    ; new-target-dec-occ := <nabl2-mk-occurrence(|target-namespace)> new-target-name
-    ; <ppdebug(|"MAIN - New target dec occ: ")> new-target-dec-occ
-    ; new-ref-count := <occurrences(rename(|new-analysis, new-target-dec-occ, "_invalid"))> new-renamed-ast
-    ; <ppdebug(|"MAIN - New ref count: ")> new-ref-count 
-    ; <?old-occ-count> new-ref-count 
-    ; result := <pp-Tiger-string> renamed-ast
-    */
+    	; (old-occ-count, renamed-ast) := <exec-rename(|analysis, target-dec-occ, new-name)> ast
+    	; check_capture(|renamed-ast, target-dec-occ, new-name, old-occ-count)
+    	
+  rename-test-var-capture : ast -> renamed-ast
+    where
+    	analysis := <nabl2-get-ast-analysis> ast
+      ; <not(nabl2-analysis-has-errors)> analysis
+    with
+      old-name := "y"
+      ; new-name := "x"
+      ; target-dec := VarDecNoType(old-name, Nil())
+    	; target-dec-occ := <collect-one(get-declaration-test(|old-name, "Var"))> ast
+    	; (old-occ-count, renamed-ast) := <exec-rename(|analysis, target-dec-occ, new-name)> ast
+    	; not(check_capture(|renamed-ast, target-dec-occ, new-name, old-occ-count))
     
 rules
 	exec-rename(|analysis, target-dec-occ, new-name): ast -> (old-occ-count, renamed-ast)
 	 where
 	    old-occ-count := <occurrences(rename(|analysis, target-dec-occ, new-name))> ast
     	; renamed-ast := <topdown(try(rename(|analysis, target-dec-occ, new-name)))> ast
+    	
+rules
+  check_capture(|renamed-ast, target-dec-occ, new-name, old-occ-count) =
+  		(new-renamed-ast, new-analysis, _, _, _) := <nabl2-analyze-ast(|"renaming.spt")> renamed-ast
+		  ; indexed-target-name := <nabl2-get-occurrence-name> target-dec-occ
+		  ; new-target-name := <nabl2-copy-ast-index(|indexed-target-name)> new-name
+		  ; target-namespace := <nabl2-get-occurrence-ns> target-dec-occ
+		  ; new-target-dec-occ := <nabl2-mk-occurrence(|target-namespace)> new-target-name
+		  ; new-ref-count := <occurrences(rename(|new-analysis, new-target-dec-occ, "_invalid"))> new-renamed-ast
+		  ; <?old-occ-count> new-ref-count 
+		  
 rules
 	get-declaration-test(|target-name, namespace): VarDecNoType(name, exp) -> dec-occ
+	where
+		<eq> (<strip-annos> target-name, <strip-annos> name) 
+    ; dec-occ := <nabl2-mk-occurrence(|namespace)> name
+    
+  get-declaration-test(|target-name, namespace): VarDec(name, type, exp) -> dec-occ
 	where
 		<eq> (<strip-annos> target-name, <strip-annos> name) 
     ; dec-occ := <nabl2-mk-occurrence(|namespace)> name

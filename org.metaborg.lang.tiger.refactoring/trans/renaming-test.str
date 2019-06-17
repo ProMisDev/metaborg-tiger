@@ -8,7 +8,7 @@ imports
 	renaming
 	
 
-rules // menu action strategies
+rules // rules called by spt
   rename-test-var : ast -> renamed-ast
     where
     	analysis := <nabl2-get-ast-analysis> ast
@@ -34,6 +34,32 @@ rules // menu action strategies
     	; target-dec-occ := <collect-one(get-declaration-test(|old-name, "Var"))> ast
     	; (old-occ-count, renamed-ast) := <exec-rename(|analysis, target-dec-occ, new-name)> ast
     	; not(check_capture(|renamed-ast, target-dec-occ, new-name, old-occ-count, path))
+    	
+  rename-test-type : ast -> renamed-ast
+    where
+    	analysis := <nabl2-get-ast-analysis> ast
+      ; <not(nabl2-analysis-has-errors)> analysis
+    with
+      old-name := "student"
+      ; new-name := "person"
+      ; path := "test/renaming/types.spt"
+      ; target-dec := TypeDec(old-name, Nil())
+    	; target-dec-occ := <collect-one(get-declaration-test(|old-name, "Type"))> ast
+    	; (old-occ-count, renamed-ast) := <exec-rename(|analysis, target-dec-occ, new-name)> ast
+    	; check_capture(|renamed-ast, target-dec-occ, new-name, old-occ-count, path)
+    	
+  rename-test-field : ast -> renamed-ast
+    where
+    	analysis := <nabl2-get-ast-analysis> ast
+      ; <not(nabl2-analysis-has-errors)> analysis
+    with
+      old-name := "name"
+      ; new-name := "fullName"
+      ; path := "test/renaming/types.spt"
+      ; target-dec := Field(old-name, Nil())
+    	; target-dec-occ := <collect-one(get-declaration-test(|old-name, "Field"))> ast
+    	; (old-occ-count, renamed-ast) := <exec-rename(|analysis, target-dec-occ, new-name)> ast
+    	; check_capture(|renamed-ast, target-dec-occ, new-name, old-occ-count, path)
     
 rules
 	exec-rename(|analysis, target-dec-occ, new-name): ast -> (old-occ-count, renamed-ast)
@@ -58,6 +84,16 @@ rules
     ; dec-occ := <nabl2-mk-occurrence(|namespace)> name
     
   get-declaration-test(|target-name, namespace): VarDec(name, type, exp) -> dec-occ
+	where
+		<eq> (<strip-annos> target-name, <strip-annos> name) 
+    ; dec-occ := <nabl2-mk-occurrence(|namespace)> name
+    
+  get-declaration-test(|target-name, namespace): TypeDec(name, type) -> dec-occ
+	where
+		<eq> (<strip-annos> target-name, <strip-annos> name) 
+    ; dec-occ := <nabl2-mk-occurrence(|namespace)> name
+    
+  get-declaration-test(|target-name, namespace): Field(name, type) -> dec-occ
 	where
 		<eq> (<strip-annos> target-name, <strip-annos> name) 
     ; dec-occ := <nabl2-mk-occurrence(|namespace)> name

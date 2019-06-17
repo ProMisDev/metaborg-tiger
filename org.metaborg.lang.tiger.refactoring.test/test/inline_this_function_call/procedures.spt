@@ -1,4 +1,4 @@
-module inline-functions
+module inline-procedure-calls
 
 language TigerRefactoring
 

@@ -69,10 +69,15 @@ rules //replace-call
   	; vars := <zip(create-var-dec)> (params, args)
   	
 rules //delete-function-dec
-	delete-function(|target-dec-occ): FunDecs(funDecs) -> FunDecs(reducedFunDecs)
+	delete-function(|target-dec-occ): FunDecs(funDecs) -> newFunDecs
 	where
 	  reducedFunDecs := <filter(delete-function-dec(|target-dec-occ))> funDecs
-	  
+	  ; <ppdebug(|"reduced fun decs:")> reducedFunDecs
+	  ; if <eq>(<strip-annos> reducedFunDecs, []) 
+	    then newFunDecs := [] 
+	    else newFunDecs := FunDecs(reducedFunDecs) end
+	  ; <ppdebug(|"new fun decs:")> newFunDecs
+	    
   delete-function-dec(|target-dec-occ): fun@FunDec(name, params, type, body) -> fun
   where
     not(check-dec-occ(|"Var", name, target-dec-occ))

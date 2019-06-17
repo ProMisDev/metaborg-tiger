@@ -38,23 +38,18 @@ rules  //renaming steps
 rules //rename    
 
 	//Variable
-  rename(|analysis, target-dec-occ, target-name): VarDecNoType(name, exp) -> VarDecNoType(new-name, exp)
+  rename(|analysis, target-dec-occ, target-name): VarDecNoType(name, exp) -> VarDecNoType(target-name, exp)
 	where
 	 check-dec-occ(|"Var", name, target-dec-occ)
-	 ; new-name := <nabl2-copy-ast-index(|name)> target-name
-
   		
-  rename(|analysis, target-dec-occ, target-name): VarDec(name, type, exp) -> VarDec(new-name, type, exp)
+  rename(|analysis, target-dec-occ, target-name): VarDec(name, type, exp) -> VarDec(target-name, type, exp)
 	where
 		check-dec-occ(|"Var", name, target-dec-occ)
-		; new-name := <nabl2-copy-ast-index(|name)> target-name
   		
-  rename(|analysis, target-dec-occ, target-name): Var(name) -> Var(new-name)
+  rename(|analysis, target-dec-occ, target-name): Var(name) -> Var(target-name)
 	where
    check-ref-occ(|analysis, "Var", name, target-dec-occ)
-   ; new-name := <nabl2-copy-ast-index(|name)> target-name
 
-    
   //Type
   rename(|analysis, target-dec-occ, target-name): TypeDec(name, type) -> TypeDec(target-name, type)
 	where

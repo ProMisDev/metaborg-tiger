@@ -16,10 +16,11 @@ rules // menu action strategies
     with
       old-name := "msg"
       ; new-name := "message"
+      ; path := "test/renaming.spt"
       ; target-dec := VarDecNoType(old-name, Nil())
     	; target-dec-occ := <collect-one(get-declaration-test(|old-name, "Var"))> ast
     	; (old-occ-count, renamed-ast) := <exec-rename(|analysis, target-dec-occ, new-name)> ast
-    	; check_capture(|renamed-ast, target-dec-occ, new-name, old-occ-count)
+    	; check_capture(|renamed-ast, target-dec-occ, new-name, old-occ-count, path)
     	
   rename-test-var-capture : ast -> renamed-ast
     where
@@ -28,10 +29,11 @@ rules // menu action strategies
     with
       old-name := "y"
       ; new-name := "x"
+      ; path := "test/renaming.spt"
       ; target-dec := VarDecNoType(old-name, Nil())
     	; target-dec-occ := <collect-one(get-declaration-test(|old-name, "Var"))> ast
     	; (old-occ-count, renamed-ast) := <exec-rename(|analysis, target-dec-occ, new-name)> ast
-    	; not(check_capture(|renamed-ast, target-dec-occ, new-name, old-occ-count))
+    	; not(check_capture(|renamed-ast, target-dec-occ, new-name, old-occ-count, path))
     
 rules
 	exec-rename(|analysis, target-dec-occ, new-name): ast -> (old-occ-count, renamed-ast)
@@ -40,8 +42,8 @@ rules
     	; renamed-ast := <topdown(try(rename(|analysis, target-dec-occ, new-name)))> ast
     	
 rules
-  check_capture(|renamed-ast, target-dec-occ, new-name, old-occ-count) =
-  		(new-renamed-ast, new-analysis, _, _, _) := <nabl2-analyze-ast(|"renaming.spt")> renamed-ast
+  check_capture(|renamed-ast, target-dec-occ, new-name, old-occ-count, path) =
+  		(new-renamed-ast, new-analysis, _, _, _) := <nabl2-analyze-ast(|path)> renamed-ast
 		  ; indexed-target-name := <nabl2-get-occurrence-name> target-dec-occ
 		  ; new-target-name := <nabl2-copy-ast-index(|indexed-target-name)> new-name
 		  ; target-namespace := <nabl2-get-occurrence-ns> target-dec-occ

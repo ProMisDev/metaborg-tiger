@@ -172,7 +172,7 @@ rules // Utility functions
 		; <eq> (<strip-annos> occ-name, <strip-annos> name) 
     ; dec-occ := <nabl2-mk-occurrence(|namespace)> name
   	; <?dec-occ> target-dec-occ
-		
+  	
 rules // external rules
 	external read-config-file(|)
 	

@@ -1,0 +1,22 @@
+module extract-function
+
+imports 
+	signatures/-
+	nabl2/api
+	pp
+	libspoofax/stratego/debug
+	renaming
+
+rules // menu action strategies
+
+  extract-function-action :
+    (selected-term, _, ast, path, project-path) -> (filename, result)
+    where
+    	analysis := <nabl2-get-ast-analysis> ast;
+      <not(nabl2-analysis-has-errors)> analysis
+    with
+      filename := <guarantee-extension(|"refactored.tig")> path 
+      ; <ppdebug(|"Selected Term:")> selected-term
+      ; extracted-ast := ast
+      ; result := <pp-Tiger-string> extracted-ast  
+       		

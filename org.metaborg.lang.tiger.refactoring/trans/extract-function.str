@@ -18,25 +18,73 @@ rules // menu action strategies
     with
       filename := <guarantee-extension(|"refactored.tig")> path 
       ; selected-list := <make-list> selected-term
+      ; <ppdebug(|"Selected list:		")> selected-list
+      ; <map(is-exp) <+ (ppdebug(|"Not all selected terms are expressions: ") ; fail)> selected-list
+      ; function-name := "foo"
+      ; new-fun-dec := <create-function(|function-name)> selected-list
       ; first-term := <head> selected-list
-      ; <ppdebug(|"First termm")> first-term
-      ; extracted-ast := <oncetd(find-first-term(|first-term, selected-list))> ast
-      ; <ppdebugna0> extracted-ast
-      ; result := <pp-Tiger-string> extracted-ast  
+      ; ast2 := <oncetd(insert-call(|first-term, function-name))> ast
+      ; <ppdebugna0> ast2
+      ; ast3 := <topdown(try(delete-extracted-exp(|selected-list)))> ast2
+      ; <ppdebugna0> ast3
+      ; ast4 := <insert-function(|new-fun-dec)> ast3
+      ; <ppdebugna0> ast4
+      ; result := <pp-Tiger-string> ast4 
        	
-rules
-	find-first-term(|first-term, selected-list): term -> Let(declarations, [])
+rules	    
+	create-function(|function-name): selected-list -> funDec
+  where
+    funDec := FunDecs([ProcDec(function-name, [], Seq(selected-list))])
+	    
+	insert-function(|new-fun-dec): Mod(Let(declarations, expressions)) -> Mod(Let(extendedDeclration, expressions))
+	  where
+	  	<ppdebug(|"new-fun-dec:		")> new-fun-dec
+	  	;<ppdebug(|"declarations:	")> declarations
+	    ;extendedDeclration := <concat> [declarations, [new-fun-dec]]
+	
+	insert-call(|first-term, function-name): term -> Call(function-name, [])
 	  where
 	    <?term> first-term
-	    ; declarations := [FunDecs([ProcDec("foo", [], Seq(selected-list))])]
 	    
-	find-let-body(|selected-term): Let(declarations, expressions) -> Let(declarations, expressions)
-	  where
-	    <ppdebug(|"Expressions:			")> expressions
-	    ; <ppdebug(|"selected-term:			 ")> selected-term
-	    ; <?selected-term> expressions
-	    ; <ppdebug0> "Found Body"
-	    
+	delete-extracted-exp(|selected-list): Let(decs, exps) -> Let(decs, filteredExps)
+	    where
+	    	filteredExps := <filter(is-extracted-exp(|selected-list))> exps
+	    	
+	is-extracted-exp(|selected-list): exp -> exp
+		where
+			<not(elem)> (exp, selected-list)
+	    	
+rules	//is-exp
+	is-exp: Let(_,_) -> ()
+	is-exp: Array(_, _, _) -> ()
+	is-exp: Seq(_) ->  ()
+	is-exp: If(_,_,_) -> ()
+	is-exp: IfThen(_,_) -> ()
+	is-exp: While(_,_) -> ()
+	is-exp: For(_,_,_,_) -> ()
+	is-exp: Break() -> ()
+	is-exp: Call(_,_) -> ()
+	is-exp: Int(_) -> ()
+	is-exp: Uminus(_) -> ()
+	is-exp: Times(_,_) -> ()
+	is-exp: Divide(_,_) -> ()
+	is-exp: Plus(_,_) -> () 
+	is-exp: Minus(_,_) -> ()
+	is-exp: Eq(_,_) -> () 
+	is-exp: Neq(_,_) -> ()
+	is-exp: Gt(_,_) -> () 
+	is-exp: Lt(_,_) -> ()  
+	is-exp: Geq(_,_) -> () 
+	is-exp: Leq(_,_) -> ()  
+	is-exp: And(_,_) -> ()
+	is-exp: Or(_,_) -> ()   
+	is-exp: NilExp() -> ()
+	is-exp: Record(_,_) -> ()
+	is-exp: String(_) -> ()
+	is-exp: Var(_) -> ()
+	is-exp: Assign(_,_) -> ()
+
+rules // Utility functions
 	make-list: term -> list
 	where
 		if <?Cons(_,_)> term 

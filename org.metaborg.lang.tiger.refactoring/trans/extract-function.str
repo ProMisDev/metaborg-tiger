@@ -5,6 +5,7 @@ imports
 	nabl2/api
 	pp
 	libspoofax/stratego/debug
+	libstratego-lib
 	renaming
 
 rules // menu action strategies
@@ -16,7 +17,30 @@ rules // menu action strategies
       <not(nabl2-analysis-has-errors)> analysis
     with
       filename := <guarantee-extension(|"refactored.tig")> path 
-      ; <ppdebug(|"Selected Term:")> selected-term
-      ; extracted-ast := ast
+      ; selected-list := <make-list> selected-term
+      ; first-term := <head> selected-list
+      ; <ppdebug(|"First termm")> first-term
+      ; extracted-ast := <oncetd(find-first-term(|first-term, selected-list))> ast
+      ; <ppdebugna0> extracted-ast
       ; result := <pp-Tiger-string> extracted-ast  
-       		
+       	
+rules
+	find-first-term(|first-term, selected-list): term -> Let(declarations, [])
+	  where
+	    <?term> first-term
+	    ; declarations := [FunDecs([ProcDec("foo", [], Seq(selected-list))])]
+	    
+	find-let-body(|selected-term): Let(declarations, expressions) -> Let(declarations, expressions)
+	  where
+	    <ppdebug(|"Expressions:			")> expressions
+	    ; <ppdebug(|"selected-term:			 ")> selected-term
+	    ; <?selected-term> expressions
+	    ; <ppdebug0> "Found Body"
+	    
+	make-list: term -> list
+	where
+		if <?Cons(_,_)> term 
+		then list := term
+		else list := Cons(term, Nil()) end
+		
+	head: [head| tail] -> head

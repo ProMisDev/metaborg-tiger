@@ -40,7 +40,7 @@ rules // rules called by spt
       //recursive function detection
       ; <not(collect-one(replace-call(|analysis, target-dec-occ, body, params)))> body 
       ; inlined-ast := <topdown(try(replace-call(|analysis, target-dec-occ, body, params)))> ast  
-      ; result := <topdown(try(delete-function(|target-dec-occ)))> inlined-ast 
+      ; result := <bottomup(try(delete-function(|target-dec-occ));try(concat))> inlined-ast 
       ; <ppdebugna0> result
       
 rules

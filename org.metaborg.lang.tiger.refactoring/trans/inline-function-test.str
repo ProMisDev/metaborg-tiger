@@ -31,11 +31,15 @@ rules // rules called by spt
       
 	inline-function-test : ast -> result
     where
-			result := <exce-inline-function-test(|"plus")> ast
+			result := <exce-inline-function-test(fail|"plus")> ast
 
 	inline-procedure-test : ast -> result
     where
-      result := <exce-inline-function-test(|"printnl")> ast
+      result := <exce-inline-function-test(fail|"printnl")> ast
+      
+  inline-function-recursion-test: ast -> result
+  	where
+  		result := <exce-inline-function-test(id|"fact")> ast
       
 rules
 	check-recursive(|analysis, target-dec-occ, body, params) = 
@@ -59,16 +63,22 @@ rules
       ; (params, body, target-dec-occ) := <exec-get-function(|analysis, target-call)> ast
       ; result := <inline-this-function-call(|target-call, body, params)> ast
       
-	exce-inline-function-test(|function-name) : ast -> result
+	exce-inline-function-test(recursion-expected|function-name) : ast -> result
     where
     	analysis := <nabl2-get-ast-analysis> ast;
       <not(nabl2-analysis-has-errors)> analysis
     with
       target-call := <collect-one(get-call-test(|function-name))> ast
       ; (params, body, target-dec-occ) := <exec-get-function(|analysis, target-call)> ast
-      ; check-recursive(|analysis, target-dec-occ, body, params)
+      ;if recursion-expected
+      then 
+      	not(check-recursive(|analysis, target-dec-occ, body, params))
+      ; result := ast
+      else 
+      	check-recursive(|analysis, target-dec-occ, body, params) 
       ; inlined-ast := <inline-all-calls(|analysis, target-dec-occ, body, params)> ast  
       ; result := <delete-fun-dec(|target-dec-occ)> inlined-ast 
+      end
 
 rules
   get-call-test(|target-name): Call(name, args) -> name

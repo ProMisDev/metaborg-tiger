@@ -25,12 +25,11 @@ rules // menu action strategies
       <not(nabl2-analysis-has-errors)> analysis
     with
       filename := <guarantee-extension(|"refactored.tig")> path
-      ; target-dec-occ := <collect-one(get-function-declaration(|analysis, selected-id)) > ast
-      ; (params, body) := <collect-one(get-function(|target-dec-occ))> ast
-      //recursive function detection
-      ; <not(collect-one(replace-call(|analysis, target-dec-occ, body, params)))> body 
-      ; inlined-ast := <topdown(try(replace-call(|analysis, target-dec-occ, body, params)))> ast  
-      ; result := <bottomup(try(delete-function(|target-dec-occ));try(concat)); pp-Tiger-string> inlined-ast    
+      ; (params, body, target-dec-occ) := <exec-get-function(|analysis, selected-id)> ast
+      ;	check-recursive(|analysis, target-dec-occ, body, params) 
+      ; inlined-ast := <inline-all-calls(|analysis, target-dec-occ, body, params)> ast  
+      ; cleaned-ast := <delete-fun-dec(|target-dec-occ)> inlined-ast      
+      ; result := <pp-Tiger-string> cleaned-ast
        
 rules  //inlining steps
   exec-get-function(|analysis, selected-id): ast -> (params, body, target-dec-occ)
@@ -41,6 +40,18 @@ rules  //inlining steps
   inline-this-function-call(|selected-id, body, params): ast -> inlined-ast
     where
       inlined-ast := <oncetd(replace-this-call(|selected-id, body, params))> ast
+      
+  check-recursive(|analysis, target-dec-occ, body, params) = 
+		<not(collect-one(replace-call(|analysis, target-dec-occ, body, params)))>  body
+		
+	inline-all-calls(|analysis, target-dec-occ, body, params): ast -> inlined-ast
+		where
+			inlined-ast := <topdown(try(replace-call(|analysis, target-dec-occ, body, params)))>
+			
+	delete-fun-dec(|target-dec-occ): ast -> cleaned-ast-2
+		where
+			cleaned-ast := <topdown(try(delete-function(|target-dec-occ)))> ast
+			; cleaned-ast-2 := <topdown(try(delete-empty-fun-decs))> cleaned-ast
       
 rules //get-function-declaration
 	get-function-declaration(|analysis, selected-id): Call(name, args) -> dec-occ
@@ -69,12 +80,9 @@ rules //replace-call
   	; vars := <zip(create-var-dec)> (params, args)
   	
 rules //delete-function-dec
-	delete-function(|target-dec-occ): FunDecs(funDecs) -> newFunDecs
+	delete-function(|target-dec-occ): FunDecs(funDecs) -> FunDecs(reducedFunDecs)
 	where
 	  reducedFunDecs := <filter(delete-function-dec(|target-dec-occ))> funDecs
-	  ; if <eq>(<strip-annos> reducedFunDecs, []) 
-	    then newFunDecs := [] 
-	    else newFunDecs := FunDecs(reducedFunDecs) end
 	    
   delete-function-dec(|target-dec-occ): fun@FunDec(name, params, type, body) -> fun
   where
@@ -83,6 +91,10 @@ rules //delete-function-dec
   delete-function-dec(|target-dec-occ): proc@ProcDec(name, params, body) -> proc
   where
     not(check-dec-occ(|"Var", name, target-dec-occ))
+    
+  delete-empty-fun-decs: Let(decs, exps) -> Let(cleanedDecs, exps)
+  where
+  	cleanedDecs := <filter(not(?FunDecs([])))> decs
   
 rules //create-var-dec
 	create-var-dec : (FArg(name, tid), exp) -> VarDec(name, tid, exp)

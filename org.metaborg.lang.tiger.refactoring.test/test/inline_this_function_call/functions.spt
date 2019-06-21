@@ -1,4 +1,4 @@
-module inline-functions
+module inline-function-calls
 
 language TigerRefactoring
 

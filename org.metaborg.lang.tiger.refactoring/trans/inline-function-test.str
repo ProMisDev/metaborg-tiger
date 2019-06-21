@@ -31,18 +31,24 @@ rules // rules called by spt
       
 	inline-function-test : ast -> result
     where
-    	analysis := <nabl2-get-ast-analysis> ast;
-      <not(nabl2-analysis-has-errors)> analysis
-    with
-      target-call := <collect-one(get-call-test(|"printnl"))> ast
-      ; <ppdebug0> target-call
-      ; (params, body, target-dec-occ) := <exec-get-function(|analysis, target-call)> ast
-      //recursive function detection
-      ; <not(collect-one(replace-call(|analysis, target-dec-occ, body, params)))> body 
-      ; inlined-ast := <topdown(try(replace-call(|analysis, target-dec-occ, body, params)))> ast  
-      ; result := <bottomup(try(delete-function(|target-dec-occ));try(concat))> inlined-ast 
-      ; <ppdebugna0> result
+			result := <exce-inline-function-test(|"plus")> ast
+
+	inline-procedure-test : ast -> result
+    where
+      result := <exce-inline-function-test(|"printnl")> ast
       
+rules
+	check-recursive(|analysis, target-dec-occ, body, params) = 
+		<not(collect-one(replace-call(|analysis, target-dec-occ, body, params)))>  body
+		
+	inline-all-calls(|analysis, target-dec-occ, body, params): ast -> inlined-ast
+		where
+			inlined-ast := <topdown(try(replace-call(|analysis, target-dec-occ, body, params)))>
+			
+	delete-fun-dec(|target-dec-occ): ast -> cleaned-ast
+		where
+			cleaned-ast := <bottomup(try(delete-function(|target-dec-occ));try(concat))> ast
+          
 rules
 	exec-inline-call-test(|functionName) : ast -> result
     where
@@ -52,6 +58,17 @@ rules
       target-call := <collect-one(get-call-test(|functionName))> ast
       ; (params, body, target-dec-occ) := <exec-get-function(|analysis, target-call)> ast
       ; result := <inline-this-function-call(|target-call, body, params)> ast
+      
+	exce-inline-function-test(|function-name) : ast -> result
+    where
+    	analysis := <nabl2-get-ast-analysis> ast;
+      <not(nabl2-analysis-has-errors)> analysis
+    with
+      target-call := <collect-one(get-call-test(|function-name))> ast
+      ; (params, body, target-dec-occ) := <exec-get-function(|analysis, target-call)> ast
+      ; check-recursive(|analysis, target-dec-occ, body, params)
+      ; inlined-ast := <inline-all-calls(|analysis, target-dec-occ, body, params)> ast  
+      ; result := <delete-fun-dec(|target-dec-occ)> inlined-ast 
 
 rules
   get-call-test(|target-name): Call(name, args) -> name

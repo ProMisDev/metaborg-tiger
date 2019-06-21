@@ -3,7 +3,7 @@ module inline-functions
 language TigerRefactoring
 
 
-test inline function call [[
+test inline procedure call [[
 let 
 	function printnl(x : string) = (
 		print(x); 
@@ -13,7 +13,7 @@ in
    	printnl("Hello World");
    	printnl("Hello World")
 end
-]] run inline-function-test to [[
+]] run inline-procedure-test to [[
 let
   
  in
@@ -31,6 +31,37 @@ let
     (
       print(x);
       print("\n")
+    )
+  end
+end
+]]
+
+test inline function call [[
+let 
+	function plus(a : int, b:int) : int = (
+		a + b
+	)
+in 
+   	plus(1,2);
+   	plus(3,4)
+end
+]] run inline-function-test to [[
+let
+ in
+  let
+    var a : int := 1
+    var b : int := 2
+   in
+    (
+      a + b
+    )
+  end;
+  let
+    var a : int := 3
+    var b : int := 4
+   in
+    (
+      a + b
     )
   end
 end

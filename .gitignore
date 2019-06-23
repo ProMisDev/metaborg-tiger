@@ -10,6 +10,7 @@ store.core.ds
 *.pp.tig
 /org.metaborg.lang.tiger.interpreter/src/main/java/org/metaborg/org/metaborg/lang/tiger/interpreter/generated
 *.refactored.tig
+*.dot
 
 # Gradle
 .gradle

@@ -5,3 +5,4 @@ org.metaborg.lang.tiger.interpreter/src/main/java/org/metaborg/org/metaborg/lang
 store.core.ds
 .factorypath
 *.refactored.tig
+*.dot

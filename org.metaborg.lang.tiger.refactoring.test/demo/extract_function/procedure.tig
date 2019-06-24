@@ -1,0 +1,14 @@
+/* 
+test file to extract a procedure 
+print("Hello"); print("World")-> printHelloWord()
+*/
+
+let 
+	var y : string := "world"
+in
+		y := "World";
+		y := "world";
+		y := "world";
+   	print("Hello");
+   	print(y)
+end

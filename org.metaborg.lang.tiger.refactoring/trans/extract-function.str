@@ -20,7 +20,7 @@ rules // menu action strategies
       ; selected-list := <make-list> selected-term
       ; <ppdebug(|"Selected list:		")> selected-list
       ; <map(is-exp) <+ (ppdebug(|"Not all selected terms are expressions: ") ; fail)> selected-list
-      ; function-name := "foo"
+      ; function-name := <read-config-file> ($[[project-path]/[path].rfac], "refactoring.extract")  
       ; new-fun-dec := <create-function(|function-name)> selected-list
       ; first-term := <head> selected-list
       ; ast2 := <oncetd(insert-call(|first-term, function-name))> ast

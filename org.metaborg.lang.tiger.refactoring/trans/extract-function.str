@@ -31,17 +31,37 @@ rules // menu action strategies
 rules	    
 	create-function(|function-name): selected-list -> funDec
   where
-    funDec := FunDecs([ProcDec(function-name, [], Seq(selected-list))])
+    funDec := ProcDec(function-name, [], Seq(selected-list))
 	    
 	extract-function(|new-fun-dec, first-term, function-name, selected-list): this-let@Let(decs, exps) -> Let(newDecs, newExps)
 	  where
 	  	<elem> (first-term, exps)	
 	  	; newExps := <oncetd(insert-call(|first-term, function-name))> exps
-	    ; newDecs := <concat> [decs, [new-fun-dec]]
+	    ; newDecs := <concat> [decs, [FunDecs([new-fun-dec])]]
 	
+	extract-function(|new-fun-dec, first-term, function-name, selected-list): FunDecs(decs) -> FunDecs(newDecs)
+  where
+  	editedDecs := <map(edit-fun-dec(|first-term, function-name, selected-list))> decs
+    ; newDecs := <concat> [editedDecs, [new-fun-dec]]
+    
+  edit-fun-dec(|first-term, function-name, selected-list): FunDec(name, params, type, body) -> FunDec(name, params, type, newBody)
+	where
+		<ppdebug(|"first-term: ")> first-term;
+		if  <oncetd(insert-call(|first-term, function-name))> body
+		then newBody := <oncetd(insert-call(|first-term, function-name))> body
+		else newBody := body end
+		
+	edit-fun-dec(|first-term, function-name, selected-list): ProcDec(name, params, body) -> ProcDec(name, params, newBody)
+	where
+		<ppdebug(|"first-term: ")> first-term;
+		if  <oncetd(insert-call(|first-term, function-name))> body
+		then newBody := <oncetd(insert-call(|first-term, function-name))> body
+		else newBody := body end
+		
 	insert-call(|first-term, function-name): term -> Call(function-name, [])
 	  where
 	    <?term> first-term
+	    ;<ppdebug0>"found"
 	    
 	delete-extracted-exp(|selected-list): Let(decs, exps) -> Let(decs, filteredExps)
 	    where

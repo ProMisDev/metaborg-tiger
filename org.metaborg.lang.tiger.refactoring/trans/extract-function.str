@@ -17,18 +17,15 @@ rules // menu action strategies
       <not(nabl2-analysis-has-errors)> analysis
     with
       filename := <guarantee-extension(|"refactored.tig")> path 
+      ; <ppdebugna(|"Selected term: ")> selected-term
       ; selected-list := <make-list> selected-term
-      ; <ppdebug(|"Selected list:		")> selected-list
+      ; <ppdebugna(|"Selected list:		")> selected-list
       ; <map(is-exp) <+ (ppdebug(|"Not all selected terms are expressions: ") ; fail)> selected-list
       ; function-name := <read-config-file> ($[[project-path]/[path].rfac], "refactoring.extract")  
       ; new-fun-dec := <create-function(|function-name)> selected-list
       ; first-term := <head> selected-list
-      ; target-let := <collect-one(get-surounding-let(|first-term))> ast
-      ; <ppdebug(|"target-let")> target-let
       ; ast2 := <oncetd(extract-function(|new-fun-dec, first-term, function-name, selected-list))> ast
-      ; <ppdebugna2> ast2
   		; ast3 := <topdown(try(delete-extracted-exp(|selected-list)))> ast2
-      ; <ppdebugna3> ast3
       ; result := <pp-Tiger-string> ast3
        	
 rules	    
@@ -39,7 +36,6 @@ rules
 	extract-function(|new-fun-dec, first-term, function-name, selected-list): this-let@Let(decs, exps) -> Let(newDecs, newExps)
 	  where
 	  	<elem> (first-term, exps)	
-	  	;<ppdebug0> "found"
 	  	; newExps := <oncetd(insert-call(|first-term, function-name))> exps
 	    ; newDecs := <concat> [decs, [new-fun-dec]]
 	
@@ -55,10 +51,6 @@ rules
 		where
 			<not(elem)> (exp, selected-list)
 			
-	get-surounding-let(|first-term): Let(decs, exps) -> Let(decs, exps)
-		where 
-	    <elem> (first-term, exps)	
-	    
 rules	//is-exp
 	is-exp: Let(_,_) -> ()
 	is-exp: Array(_, _, _) -> ()

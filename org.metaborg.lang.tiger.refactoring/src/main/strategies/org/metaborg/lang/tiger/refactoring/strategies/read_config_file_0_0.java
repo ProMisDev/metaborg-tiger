@@ -22,9 +22,10 @@ public class read_config_file_0_0 extends Strategy {
 	@Override
 	public IStrategoTerm invoke(Context context, IStrategoTerm current) {
 		ITermFactory factory = context.getFactory();
-		String propertyFilePath = Tools.asJavaString(current);
+		String propertyFilePath = Tools.asJavaString(current.getSubterm(0));
+		String propertyKey = Tools.asJavaString(current.getSubterm(1));
 		FileObject propertyFileObject = getPropertyFileObject(context, propertyFilePath);
-		String property = readProperty(propertyFileObject);
+		String property = readProperty(propertyFileObject, propertyKey);
 		IStrategoTerm propertyTerm = factory.makeString(property);
 		return propertyTerm;
 	}
@@ -42,13 +43,13 @@ public class read_config_file_0_0 extends Strategy {
 		return fileObject;
 	}
 
-	private String readProperty(FileObject fileObject) {
+	private String readProperty(FileObject fileObject, String propertyKey) {
 		try (InputStream input = fileObject.getContent().getInputStream()) {
 			Properties prop = new Properties();
 			prop.load(input);
-		    String property = prop.getProperty("refactoring.rename");
+		    String property = prop.getProperty(propertyKey);
 		    if (property == null || property.isEmpty()) {
-		    	throw new IllegalArgumentException("Property 'refactoring.rename' is not defined.");
+		    	throw new IllegalArgumentException("Property is not defined: " + propertyKey);
 		    }
 			return property;
 

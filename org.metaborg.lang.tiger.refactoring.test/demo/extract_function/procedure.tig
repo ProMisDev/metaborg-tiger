@@ -1,0 +1,12 @@
+/* 
+test file to extract a procedure 
+print("Hello"); print("World")-> printHelloWord()
+*/
+
+let 
+	var msg := "Hi"
+in
+		print(msg);
+		msg := "Hello";
+		print(msg)
+end

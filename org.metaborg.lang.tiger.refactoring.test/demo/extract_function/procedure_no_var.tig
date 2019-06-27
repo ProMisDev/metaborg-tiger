@@ -1,0 +1,11 @@
+/* 
+test file to extract a procedure 
+print("Hello"); print("World")-> printHelloWord()
+*/
+
+let 
+	
+in
+   	print("Hello");
+   	print("World")
+end

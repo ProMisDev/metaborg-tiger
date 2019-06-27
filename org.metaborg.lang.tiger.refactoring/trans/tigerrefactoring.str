@@ -8,10 +8,10 @@ imports
   analysis
   desugar
   renaming
-  inline-function
   renaming-test
+  inline-function
   inline-function-test
-
+  extract-function
 
   nabl2/runtime/analysis/debug
   nabl2/runtime/prelude/-

@@ -1,0 +1,14 @@
+/* 
+test file to extract a procedure with nested lets
+*/
+
+let 
+	var hello := "hello"
+in
+	let
+		var world := "world"
+	in
+   	hello := "Hello";
+   	world := "World"
+  end
+end

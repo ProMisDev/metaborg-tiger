@@ -4,9 +4,11 @@ print("Hello"); print("World")-> printHelloWord()
 */
 
 let 
-	var msg := "Hi"
+	var a := 1
+	var b := 2
+	var c := 3
 in
-		print(msg);
-		msg := "Hello";
-		print(msg)
+		a := 3;
+		b := 4;
+		c := 5
 end

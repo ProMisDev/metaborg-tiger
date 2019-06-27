@@ -1,15 +1,14 @@
 /* 
-test file to extract a procedure 
-print("Hello"); print("World")-> printHelloWord()
+test file to extract a procedure with nested lets
 */
 
 let 
-	var x := 1
+	var hello := "Hello"
 in
 	let
-		var y := 2
+		var world := "world"
 	in
-   	print("Hello");
-   	print("World")
+   	print(hello);
+   	print(world)
   end
 end

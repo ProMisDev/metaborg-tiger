@@ -17,7 +17,6 @@ rules // menu action strategies
       <not(nabl2-analysis-has-errors)> analysis
     with
       filename := <guarantee-extension(|"refactored.tig")> path 
-      ; <ppdebugna(|"Selected term: ")> selected-term
       ; selected-list := <make-list> selected-term
       ; <ppdebugna(|"Selected list:		")> selected-list
       ; <map(is-exp) <+ (ppdebug(|"Not all selected terms are expressions: ") ; fail)> selected-list
@@ -34,16 +33,17 @@ rules
   where
   	type := <last; nabl2-get-ast-type(|analysis)> selected-list
   	; vars := <map(collect-all(?Var(_))); concat> selected-list
-  	; compressedVars := <map(strip-annos;make-list);unions> vars
-  	; <ppdebugna(|"Vars: ")> vars
+  	; filteredVars := <filter(filter-local-var(|analysis, selected-list))> vars
+  	; compressedVars := <map(strip-annos;make-list);unions> filteredVars
+  	; <ppdebug(|"Vars: ")> vars
+  	; <ppdebug(|"Filtered vars: ")> filteredVars
   	; <ppdebugna(|"Compressed vars: ")> compressedVars
-  	; fargs := <map(var-to-farg(|analysis))> vars
+  	; fargs := <map(var-to-farg(|analysis))> filteredVars
   	; compressedFargs := <map(strip-annos;make-list);unions> fargs
-  	; <ppdebugna(|"Fargs: ")> fargs
-  	; <ppdebugna(|"Compressed fargs: ")> compressedFargs
+  	; body := <map(strip-annos)> selected-list
   	;if <?UNIT()> type
-  	then funDec := ProcDec(function-name, compressedFargs, Seq(selected-list))
-  	else funDec := FunDec(function-name, compressedFargs, <nabl-to-tid> type, Seq(selected-list)) end
+  	then funDec := ProcDec(function-name, compressedFargs, Seq(body))
+  	else funDec := FunDec(function-name, compressedFargs, <nabl-to-tid> type, Seq(body)) end
 	    
 	extract-function(|new-fun-dec, first-term, function-name, selected-list, vars): this-let@Let(decs, exps) -> Let(newDecs, newExps)
 	  where
@@ -76,6 +76,10 @@ rules
 	    where
 	    	filteredExps := <filter(is-extracted-exp(|selected-list))> exps
 	    	
+	delete-extracted-exp(|selected-list): Seq(exps) -> Seq(filteredExps)
+    where
+    	filteredExps := <filter(is-extracted-exp(|selected-list))> exps
+	    	
 	is-extracted-exp(|selected-list): exp -> exp
 		where
 			<not(elem)> (exp, selected-list)
@@ -85,7 +89,32 @@ rules
 		<ppdebug(|"Var: ")> var;
 		type := <nabl2-get-ast-type(|analysis)> var
 		; <ppdebug(|"Type :")> type
-	
+		
+	filter-local-var(|analysis, selected-list): node@Var(name) -> node
+	where
+	 	ref-occ := <nabl2-mk-occurrence(|"Var")> name
+		; (dec-occ, _) := <nabl2-get-resolved-name(|analysis)> ref-occ
+		; <ppdebug(|"Var name: ")> name
+		; <ppdebug(|"Dec occ: ")> dec-occ
+		; foundList := <filter(collect-one(contains-dec(|dec-occ)))> selected-list
+		; <eq> (0, <length> foundList)
+		
+	contains-dec(|target-dec-occ): VarDec(name, type, exp) -> dec-occ
+	where
+		dec-occ := <nabl2-mk-occurrence(|"Var")> name 
+		; <?dec-occ> target-dec-occ
+		
+	contains-dec(|target-dec-occ): VarDecNoType(name, exp) -> dec-occ
+	where
+		dec-occ := <nabl2-mk-occurrence(|"Var")> name 
+		; <?dec-occ> target-dec-occ
+		
+	contains-dec(|target-dec-occ): For(Var(name), _, _, _) -> dec-occ
+	where
+		dec-occ := <nabl2-mk-occurrence(|"Var")> name 
+		; <ppdebug(|"Vardec name: ")> name
+		; <ppdebug(|"Vardec Dec occ: ")> dec-occ
+		; <?dec-occ> target-dec-occ
 		
 rules	//is-exp
 	is-exp: Let(_,_) -> ()

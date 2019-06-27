@@ -21,56 +21,62 @@ rules // menu action strategies
       ; <ppdebugna(|"Selected list:		")> selected-list
       ; <map(is-exp) <+ (ppdebug(|"Not all selected terms are expressions: ") ; fail)> selected-list
       ; function-name := <read-config-file> ($[[project-path]/[path].rfac], "refactoring.extract")  
-      ; (new-fun-dec, vars) := <create-function(|function-name, analysis)> selected-list
+      ; (new-fun-dec, vars, write-var) := <create-function(|function-name, analysis)> selected-list
       ; first-term := <head> selected-list
-      ; ast2 := <oncetd(extract-function(|new-fun-dec, first-term, function-name, selected-list, vars))> ast
-      ; <ppdebug2> ast2
+      ; ast2 := <oncetd(extract-function(|new-fun-dec, first-term, function-name, selected-list, vars, write-var))> ast
   		; ast3 := <topdown(try(delete-extracted-exp(|selected-list)))> ast2
       ; result := <pp-Tiger-string> ast3
        	
 rules	    
-	create-function(|function-name, analysis): selected-list -> (funDec, compressedVars)
+	create-function(|function-name, analysis): selected-list -> (funDec, compressedVars, write-var)
   where
-  	type := <last; nabl2-get-ast-type(|analysis)> selected-list
-  	; vars := <map(collect-all(?Var(_))); concat> selected-list
+  	vars := <map(collect-all(?Var(_))); concat> selected-list
   	; filteredVars := <filter(filter-local-var(|analysis, selected-list))> vars
+  	; check-multi-assign(|selected-list, filteredVars)
   	; compressedVars := <map(strip-annos;make-list);unions> filteredVars
   	; <ppdebug(|"Vars: ")> vars
   	; <ppdebug(|"Filtered vars: ")> filteredVars
   	; <ppdebugna(|"Compressed vars: ")> compressedVars
   	; fargs := <map(var-to-farg(|analysis))> filteredVars
   	; compressedFargs := <map(strip-annos;make-list);unions> fargs
-  	; body := <map(strip-annos)> selected-list
+  	; write-var := <map(collect-all(contains-var-write(|filteredVars))); concat> selected-list
+  	; body := <conc> (selected-list, write-var)
+  	; <ppdebug(|"Body :")> body
+  	; type := <last; ppdebug0; nabl2-get-ast-type(|analysis)> body
+  	; cleanedBody := <map(strip-annos)> body
   	;if <?UNIT()> type
-  	then funDec := ProcDec(function-name, compressedFargs, Seq(body))
-  	else funDec := FunDec(function-name, compressedFargs, <nabl-to-tid> type, Seq(body)) end
+  	then funDec := ProcDec(function-name, compressedFargs, Seq(cleanedBody))
+  	else funDec := FunDec(function-name, compressedFargs, <nabl-to-tid> type, Seq(cleanedBody)) end
 	    
-	extract-function(|new-fun-dec, first-term, function-name, selected-list, vars): this-let@Let(decs, exps) -> Let(newDecs, newExps)
+	extract-function(|new-fun-dec, first-term, function-name, selected-list, vars, write-var): this-let@Let(decs, exps) -> Let(newDecs, newExps)
 	  where
 	  	<elem> (first-term, exps)	
-	  	; newExps := <oncetd(insert-call(|first-term, function-name, vars))> exps
+	  	; newExps := <oncetd(insert-call(|first-term, function-name, vars, write-var))> exps
 	    ; newDecs := <concat> [decs, [FunDecs([new-fun-dec])]]
 	
-	extract-function(|new-fun-dec, first-term, function-name, selected-list, vars): FunDecs(decs) -> FunDecs(newDecs)
+	extract-function(|new-fun-dec, first-term, function-name, selected-list, vars, write-var): FunDecs(decs) -> FunDecs(newDecs)
   where
-  	editedDecs := <map(edit-fun-dec(|first-term, function-name, selected-list, vars))> decs
+  	editedDecs := <map(edit-fun-dec(|first-term, function-name, selected-list, vars, write-var))> decs
     ; newDecs := <concat> [editedDecs, [new-fun-dec]]
     
-  edit-fun-dec(|first-term, function-name, selected-list, vars): FunDec(name, params, type, body) -> FunDec(name, params, type, newBody)
+  edit-fun-dec(|first-term, function-name, selected-list, vars, write-var): FunDec(name, params, type, body) -> FunDec(name, params, type, newBody)
 	where
-		if  <oncetd(insert-call(|first-term, function-name, vars))> body
-		then newBody := <oncetd(insert-call(|first-term, function-name, vars))> body
+		if  <oncetd(insert-call(|first-term, function-name, vars, write-var))> body
+		then newBody := <oncetd(insert-call(|first-term, function-name, vars, write-var))> body
 		else newBody := body end
 		
-	edit-fun-dec(|first-term, function-name, selected-list, vars): ProcDec(name, params, body) -> ProcDec(name, params, newBody)
+	edit-fun-dec(|first-term, function-name, selected-list, vars, write-var): ProcDec(name, params, body) -> ProcDec(name, params, newBody)
 	where
-		if  <oncetd(insert-call(|first-term, function-name, vars))> body
-		then newBody := <oncetd(insert-call(|first-term, function-name, vars))> body
+		if  <oncetd(insert-call(|first-term, function-name, vars, write-var))> body
+		then newBody := <oncetd(insert-call(|first-term, function-name, vars, write-var))> body
 		else newBody := body end
 		
-	insert-call(|first-term, function-name, vars): term -> Call(function-name, vars)
+	insert-call(|first-term, function-name, vars, write-var): term -> call
 	  where
 	    <?term> first-term
+	    ; if <is-empty> write-var
+	    then call := Call(function-name, vars)
+	    else call := Assign(<head> write-var, Call(function-name, vars)) end
 	    
 	delete-extracted-exp(|selected-list): Let(decs, exps) -> Let(decs, filteredExps)
 	    where
@@ -94,8 +100,6 @@ rules
 	where
 	 	ref-occ := <nabl2-mk-occurrence(|"Var")> name
 		; (dec-occ, _) := <nabl2-get-resolved-name(|analysis)> ref-occ
-		; <ppdebug(|"Var name: ")> name
-		; <ppdebug(|"Dec occ: ")> dec-occ
 		; foundList := <filter(collect-one(contains-dec(|dec-occ)))> selected-list
 		; <eq> (0, <length> foundList)
 		
@@ -112,9 +116,18 @@ rules
 	contains-dec(|target-dec-occ): For(Var(name), _, _, _) -> dec-occ
 	where
 		dec-occ := <nabl2-mk-occurrence(|"Var")> name 
-		; <ppdebug(|"Vardec name: ")> name
-		; <ppdebug(|"Vardec Dec occ: ")> dec-occ
 		; <?dec-occ> target-dec-occ
+		
+	check-multi-assign(|selected-list, filteredVars) =
+		foundList := <map(collect-all(contains-var-write(|filteredVars))); concat> selected-list
+		; <ppdebugna(|"Found list: ")> foundList
+		; <ppdebugna(|"Found list length: ")> (<length> foundList)
+		; <gt> (2, <length> foundList)
+		
+	contains-var-write(|filteredVars): Assign(var, exp) -> var
+	where
+		<ppdebug(|"Contains Var:")> var
+		; <elem> (var, filteredVars)
 		
 rules	//is-exp
 	is-exp: Let(_,_) -> ()
@@ -159,3 +172,8 @@ rules // Utility functions
 		else list := Cons(term, Nil()) end
 		
 	head: [head| tail] -> head
+	
+	is-empty: list -> list
+	where
+		length := <length> list
+		; <eq> (length, 0)

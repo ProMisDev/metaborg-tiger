@@ -33,6 +33,8 @@ rules  //renaming steps
   		; new-name-bindings := <get-all-name-bindings(|new-analysis, new-name)> new-renamed-ast
   		; <ppdebug(|"old name bindings: ")> old-name-bindings
   		; <ppdebug(|"new name bindings: ")> new-name-bindings
+  		; <eq> (old-name-bindings, new-name-bindings)
+  		; <ppdebug0> "Bindings are equal"
     
 rules //rename    
 

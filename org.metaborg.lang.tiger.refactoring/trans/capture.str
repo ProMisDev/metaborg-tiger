@@ -11,7 +11,6 @@ rules //check-capture-rename
 	get-all-name-bindings(|analysis, target-name): ast -> name-bindings
 	where
 		name-bindings := <collect-all(get-name-binding(|analysis, target-name))> ast
-	//	;indices := <map(nabl2-get-ast-index)> name-bindings
 		
     
 rules //get-name-binding    
@@ -45,10 +44,12 @@ rules //extract-term-index
 	extract-term-index(|): occ -> <nabl2-get-ast-index> occ
 
 rules // Utility functions
-	get-dec-ref-pair(|analysis, namespace): name -> (ref-occ, dec-occ)
+	get-dec-ref-pair(|analysis, namespace): name -> (ref-index, dec-index)
 	where
 		ref-occ := <nabl2-mk-occurrence(|namespace)> name
 		; (dec-occ, _) := <nabl2-get-resolved-name(|analysis)> ref-occ
+		; ref-index := <nabl2-get-occurrence-index> ref-occ
+		; dec-index := <nabl2-get-occurrence-index> dec-occ
 		
 	eqna: (term1, term2) -> (term1, term2) 
 		where

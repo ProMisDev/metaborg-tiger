@@ -17,32 +17,29 @@ rules //get-name-binding
 
   get-name-binding(|analysis, target-name): Var(name) ->  name-binding
   where
-  	<eqna> (target-name, name)
-  	;name-binding := <get-dec-ref-pair(|analysis, "Var")> name
+  	//<eqna> (target-name, name)
+  	name-binding := <get-dec-ref-pair(|analysis, "Var")> name
 		
   get-name-binding(|analysis, target-name): Tid(name) -> name-binding
   where
-  	<eqna> (target-name, name)
-  	;name-binding := <get-dec-ref-pair(|analysis, "Type")> name
+  	//<eqna> (target-name, name)
+  	name-binding := <get-dec-ref-pair(|analysis, "Type")> name
     
 	get-name-binding(|analysis, target-name): Call(name, args) -> name-binding 
 	where
-		<eqna> (target-name, name) 
-		;name-binding := <get-dec-ref-pair(|analysis, "Var")> name
+		//<eqna> (target-name, name) 
+		name-binding := <get-dec-ref-pair(|analysis, "Var")> name
 		
 	get-name-binding(|analysis, target-name): InitField(name, exp) -> name-binding
 	where
-		<eqna> (target-name, name)
-		; name-binding := <get-dec-ref-pair(|analysis, "Var")> name
+		//<eqna> (target-name, name)
+		name-binding := <get-dec-ref-pair(|analysis, "Var")> name
   
   get-name-binding(|analysis, target-name): FieldVar(type-var, name) -> name-binding
   where
-  <eqna> (target-name, name)
-  ; name-binding := <get-dec-ref-pair(|analysis, "Var")> name
+  //<eqna> (target-name, name)
+   name-binding := <get-dec-ref-pair(|analysis, "Var")> name
   
-rules //extract-term-index
-	extract-term-index(|): occ -> <nabl2-get-ast-index> occ
-
 rules // Utility functions
 	get-dec-ref-pair(|analysis, namespace): name -> (ref-index, dec-index)
 	where

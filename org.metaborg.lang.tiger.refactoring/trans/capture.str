@@ -1,0 +1,56 @@
+module capture
+
+imports 
+	signatures/-
+	nabl2/api
+	pp
+	libspoofax/stratego/debug
+	
+rules //check-capture-rename
+
+	get-all-name-bindings(|analysis, target-name): ast -> name-bindings
+	where
+		name-bindings := <collect-all(get-name-binding(|analysis, target-name))> ast
+	//	;indices := <map(nabl2-get-ast-index)> name-bindings
+		
+    
+rules //get-name-binding    
+
+  get-name-binding(|analysis, target-name): Var(name) ->  name-binding
+  where
+  	<eqna> (target-name, name)
+  	;name-binding := <get-dec-ref-pair(|analysis, "Var")> name
+		
+  get-name-binding(|analysis, target-name): Tid(name) -> name-binding
+  where
+  	<eqna> (target-name, name)
+  	;name-binding := <get-dec-ref-pair(|analysis, "Type")> name
+    
+	get-name-binding(|analysis, target-name): Call(name, args) -> name-binding 
+	where
+		<eqna> (target-name, name) 
+		;name-binding := <get-dec-ref-pair(|analysis, "Var")> name
+		
+	get-name-binding(|analysis, target-name): InitField(name, exp) -> name-binding
+	where
+		<eqna> (target-name, name)
+		; name-binding := <get-dec-ref-pair(|analysis, "Var")> name
+  
+  get-name-binding(|analysis, target-name): FieldVar(type-var, name) -> name-binding
+  where
+  <eqna> (target-name, name)
+  ; name-binding := <get-dec-ref-pair(|analysis, "Var")> name
+  
+rules //extract-term-index
+	extract-term-index(|): occ -> <nabl2-get-ast-index> occ
+
+rules // Utility functions
+	get-dec-ref-pair(|analysis, namespace): name -> (ref-occ, dec-occ)
+	where
+		ref-occ := <nabl2-mk-occurrence(|namespace)> name
+		; (dec-occ, _) := <nabl2-get-resolved-name(|analysis)> ref-occ
+		
+	eqna: (term1, term2) -> (term1, term2) 
+		where
+		  <eq> (<strip-annos> term1, <strip-annos> term2) 
+	

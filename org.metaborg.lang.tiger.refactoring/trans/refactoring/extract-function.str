@@ -6,7 +6,7 @@ imports
 	pp
 	libspoofax/stratego/debug
 	libstratego-lib
-	renaming
+	refactoring/refactoring-util
 
 rules // menu action strategies
 

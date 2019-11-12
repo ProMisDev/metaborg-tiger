@@ -5,7 +5,7 @@ imports
 	nabl2/api
 	pp
 	libspoofax/stratego/debug
-	renaming
+	refactoring/refactoring-util
 
 rules // menu action strategies
   inline-call-action :

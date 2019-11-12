@@ -5,8 +5,8 @@ imports
 	nabl2/api
 	pp
 	libspoofax/stratego/debug
-	renaming
-	inline-function
+	refactoring/refactoring-util
+	refactoring/inline-function
 	
 rules // rules called by spt
   inline-call-test : ast -> result

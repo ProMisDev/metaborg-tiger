@@ -1,11 +1,36 @@
-module capture
+module refactoring-util
 
 imports 
 	signatures/-
 	nabl2/api
 	pp
 	libspoofax/stratego/debug
-	
+
+rules 
+  get-dec-from-dec(|namespace, name): selected-id -> dec-occ
+  where	 		
+    <?selected-id> name
+		; dec-occ := <nabl2-mk-occurrence(|namespace)> name 
+		
+	get-dec-from-ref(|analysis, namespace, name, node): selected-id -> dec-occ
+	where
+		<?selected-id> node
+		; ref-occ := <nabl2-mk-occurrence(|namespace)> name
+		; (dec-occ, _) := <nabl2-get-resolved-name(|analysis)> ref-occ
+    
+	check-ref-occ(|analysis, namespace, name, target-dec-occ) =
+		occ-name := <nabl2-get-occurrence-name> target-dec-occ
+		; <eq> (<strip-annos> occ-name, <strip-annos> name) 
+    ; ref-occ := <nabl2-mk-occurrence(|namespace)> name 
+		; (dec-occ, _) := <nabl2-get-resolved-name(|analysis)> ref-occ
+    ; <?dec-occ> target-dec-occ
+    
+  check-dec-occ(|namespace, name, target-dec-occ) =
+		occ-name := <nabl2-get-occurrence-name> target-dec-occ		
+		; <eq> (<strip-annos> occ-name, <strip-annos> name) 
+    ; dec-occ := <nabl2-mk-occurrence(|namespace)> name
+  	; <?dec-occ> target-dec-occ
+  	
 rules //check-capture-rename
 
 	get-all-name-bindings(|analysis, target-name): ast -> name-bindings
@@ -40,7 +65,7 @@ rules //get-name-binding
   //<eqna> (target-name, name)
    name-binding := <get-dec-ref-pair(|analysis, "Var")> name
   
-rules // Utility functions
+rules 
 	get-dec-ref-pair(|analysis, namespace): name -> (ref-index, dec-index)
 	where
 		ref-occ := <nabl2-mk-occurrence(|namespace)> name
@@ -51,4 +76,6 @@ rules // Utility functions
 	eqna: (term1, term2) -> (term1, term2) 
 		where
 		  <eq> (<strip-annos> term1, <strip-annos> term2) 
-	
+		  
+rules // external rules
+	external read-config-file(|)

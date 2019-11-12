@@ -33,10 +33,10 @@ rules
   	
 rules //check-capture-rename
 
-	get-all-name-bindings(|analysis, target-name): ast -> name-bindings
+	get-all-name-bindings(|analysis, target-dec-occ): ast -> name-bindings
 	where
-		name-bindings := <collect-all(get-name-binding(|analysis, target-name))> ast
-		
+	  old-name := <nabl2-get-occurrence-name> target-dec-occ;
+		name-bindings := <collect-all(get-name-binding(|analysis, old-name))> ast
     
 rules //get-name-binding    
 
@@ -76,6 +76,20 @@ rules
 	eqna: (term1, term2) -> (term1, term2) 
 		where
 		  <eq> (<strip-annos> term1, <strip-annos> term2) 
+		  
+rules //list utitily functions
+	make-list: term -> list
+	where
+		if <?Cons(_,_)> term 
+		then list := term
+		else list := Cons(term, Nil()) end
+		
+	head: [head| tail] -> head
+	
+	is-empty: list -> list
+	where
+		length := <length> list
+		; <eq> (length, 0)
 		  
 rules // external rules
 	external read-config-file(|)

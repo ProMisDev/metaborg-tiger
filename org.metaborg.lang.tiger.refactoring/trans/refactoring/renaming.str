@@ -24,8 +24,7 @@ rules // menu action strategies
 rules  //renaming steps
 	exec-rename(|analysis, target-dec-occ, new-name): ast -> (old-name-bindings, renamed-ast)
 	 where
-	 		old-name2 := <nabl2-get-occurrence-name> target-dec-occ;
-	    old-name-bindings := <get-all-name-bindings(|analysis, old-name2)> ast
+	    old-name-bindings := <get-all-name-bindings(|analysis, target-dec-occ)> ast
     	; renamed-ast := <topdown(try(rename(|analysis, target-dec-occ, new-name)))> ast
     	
   check-capture(|renamed-ast, target-dec-occ, new-name, old-name-bindings, path) =

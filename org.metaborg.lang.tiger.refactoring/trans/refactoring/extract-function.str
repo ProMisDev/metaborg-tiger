@@ -154,17 +154,3 @@ rules
 	nabl-to-tid: STRING() -> Tid("string")
 	nabl-to-tid: INT() -> Tid("int")
 	nabl-to-tid: ARRAY(INT(), _) -> Tid("intArray")
-
-rules // Utility functions
-	make-list: term -> list
-	where
-		if <?Cons(_,_)> term 
-		then list := term
-		else list := Cons(term, Nil()) end
-		
-	head: [head| tail] -> head
-	
-	is-empty: list -> list
-	where
-		length := <length> list
-		; <eq> (length, 0)

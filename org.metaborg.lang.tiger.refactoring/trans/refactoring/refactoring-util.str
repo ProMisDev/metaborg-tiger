@@ -6,16 +6,7 @@ imports
 	pp
 	libspoofax/stratego/debug
 
-rules 
-  get-dec-from-dec(|namespace): name -> dec-occ
-  where	 		
-		dec-occ := <nabl2-mk-occurrence(|namespace)> name 
-		
-	get-dec-from-ref(|analysis, namespace): name -> dec-occ
-	where
-		ref-occ := <nabl2-mk-occurrence(|namespace)> name
-		; (dec-occ, _) := <nabl2-get-resolved-name(|analysis)> ref-occ
-    
+rules     
 	check-ref-occ(|analysis, namespace, name, target-dec-occ) =
 		occ-name := <nabl2-get-occurrence-name> target-dec-occ
 		; <eq-no-annos> (occ-name, name) 
@@ -25,8 +16,6 @@ rules
     
   check-dec-occ(|namespace, name, target-dec-occ) =
 		occ-name := <nabl2-get-occurrence-name> target-dec-occ		
-		; <ppdebug(|"occ-name: ")> occ-name
-		; <ppdebug(|"name: ")> name
 		; <eq-no-annos> (occ-name, name) 
     ; dec-occ := <nabl2-mk-occurrence(|namespace)> name
   	; <?dec-occ> target-dec-occ
@@ -67,10 +56,70 @@ rules
 		; ref-index := <nabl2-get-occurrence-index> ref-occ
 		; dec-index := <nabl2-get-occurrence-index> dec-occ
 		
-	eq-no-annos: (term1, term2) -> (term1, term2) 
-		where
-		  <eq> (<strip-annos> term1, <strip-annos> term2) 
-		  
+rules //get-declaration 
+
+  get-dec-from-dec(|namespace): name -> dec-occ
+  where	 		
+		dec-occ := <nabl2-mk-occurrence(|namespace)> name 
+		
+	get-dec-from-ref(|analysis, namespace): name -> dec-occ
+	where
+		ref-occ := <nabl2-mk-occurrence(|namespace)> name
+		; (dec-occ, _) := <nabl2-get-resolved-name(|analysis)> ref-occ
+	
+	//Variable	
+  get-declaration(|analysis): VarDecNoType(name, exp) -> dec-occ
+	where
+	  dec-occ := <get-dec-from-dec(|"Var")> name
+		
+  get-declaration(|analysis): VarDec(name, type, exp) -> dec-occ
+	where
+		dec-occ := <get-dec-from-dec(|"Var")> name
+  	
+  get-declaration(|analysis): Var(name) -> dec-occ
+	where
+		dec-occ := <get-dec-from-ref(|analysis, "Var")> name
+	
+	// Type
+	get-declaration(|analysis): TypeDec(name, type) -> dec-occ
+	where
+	  dec-occ := <get-dec-from-dec(|"Type")> name
+		
+	get-declaration(|analysis): Tid(name) -> dec-occ
+	where
+	  dec-occ := <get-dec-from-ref(|analysis, "Type")> name
+		
+	// Function
+	get-declaration(|analysis): ProcDec(name, args, body) -> dec-occ
+	where
+	  dec-occ := <get-dec-from-dec(|"Var")> name
+  		
+	get-declaration(|analysis): FunDec(name, args, type, body) -> dec-occ
+	where
+	  dec-occ := <get-dec-from-dec(|"Var")> name
+		
+	get-declaration(|analysis): Call(name, args) -> dec-occ
+	where
+	  dec-occ := <get-dec-from-ref(|analysis, "Var")> name
+		
+	//Function Argument
+	get-declaration(|analysis): FArg(name, type) -> dec-occ
+	where
+	  dec-occ := <get-dec-from-dec(|"Var")> name
+	
+	//Field
+	get-declaration(|analysis): Field(name, type) -> dec-occ
+	where
+	  dec-occ := <get-dec-from-dec(|"Field")> name
+		
+	get-declaration(|analysis): InitField(name, exp) -> dec-occ
+	where
+	  dec-occ := <get-dec-from-ref(|analysis, "Field")> name
+		
+	get-declaration(|analysis): FieldVar(type-var, name) -> dec-occ
+	where
+		dec-occ := <get-dec-from-ref(|analysis, "Field")> name
+				  
 rules //get-term-from-id  
 	
 	//Variable	
@@ -139,6 +188,11 @@ rules //list utitily functions
 	where
 		length := <length> list
 		; <eq> (length, 0)
+		
+rules //Other utility functions
+	eq-no-annos: (term1, term2) -> (term1, term2) 
+		where
+		  <eq> (<strip-annos> term1, <strip-annos> term2) 
 		  
 rules // external rules
 	external read-config-file(|)

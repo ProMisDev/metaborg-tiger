@@ -34,7 +34,8 @@ rules // menu action strategies
 rules  //inlining steps
   exec-get-function(|analysis, selected-id): ast -> (params, body, target-dec-occ)
     where
-      target-dec-occ := <collect-one(get-function-declaration(|analysis, selected-id)) > ast
+    	selected-term := <collect-one(get-term-from-id(|selected-id))> ast
+      ; target-dec-occ := <collect-one(get-declaration(|analysis)) > selected-term
       ; (params, body) := <collect-one(get-function(|target-dec-occ))> ast
       
   inline-this-function-call(|selected-id, body, params): ast -> inlined-ast
@@ -56,10 +57,10 @@ rules  //inlining steps
 rules //get-function-declaration
 	get-function-declaration(|analysis, selected-id): Call(name, args) -> dec-occ
 	where
-	  dec-occ := <get-dec-from-ref(|analysis, "Var", name, name)> selected-id
+	  dec-occ := <get-dec-from-ref(|analysis, "Var")> name
 	  
 rules //get-function
-  get-function(|target-dec-occ): FunDec(name, params, type, body) -> (params, body)
+  get-function(|target-dec-occ): node@FunDec(name, params, type, body) -> (params, body)
 	where
 		check-dec-occ(|"Var", name, target-dec-occ)
 		

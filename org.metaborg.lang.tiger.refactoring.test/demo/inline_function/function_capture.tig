@@ -1,6 +1,5 @@
 /* 
-test file to inline multiple function calls
-plus(1,1) -> 1 + 1
+test file for capture when inlining
 */
 
 let 
@@ -12,7 +11,6 @@ in
 	let 
 		var a:= 2
 	in
-   	plus(2);
-   	plus(4)
+   	plus(3)
   end
 end

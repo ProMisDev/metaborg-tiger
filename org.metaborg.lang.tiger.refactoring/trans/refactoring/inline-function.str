@@ -17,6 +17,16 @@ rules // menu action strategies
       filename := <guarantee-extension(|"refactored.tig")> path
       ; (params, body, target-dec-occ) := <exec-get-function(|analysis, selected-id)> ast
       ; result := <inline-this-function-call(|selected-id, body, params); pp-Tiger-string> ast
+      
+ inline-call-action-ast :
+  (selected-id, _, ast, path, project-path) -> (filename, result)
+  where
+  	analysis := <nabl2-get-ast-analysis> ast;
+    <not(nabl2-analysis-has-errors)> analysis
+  with
+    filename := <guarantee-extension(|"refactored.tig")> path
+    ; (params, body, target-dec-occ) := <exec-get-function(|analysis, selected-id)> ast
+    ; result := <inline-this-function-call(|selected-id, body, params)> ast
 
   inline-function-action :
     (selected-id, _, ast, path, project-path) -> (filename, result)
@@ -30,12 +40,27 @@ rules // menu action strategies
       ; inlined-ast := <inline-all-calls(|analysis, target-dec-occ, body, params)> ast  
       ; cleaned-ast := <delete-fun-dec(|target-dec-occ)> inlined-ast      
       ; result := <pp-Tiger-string> cleaned-ast
+      
+  inline-function-action-ast :
+    (selected-id, _, ast, path, project-path) -> (filename, result)
+    where
+    	analysis := <nabl2-get-ast-analysis> ast;
+      <not(nabl2-analysis-has-errors)> analysis
+    with
+      filename := <guarantee-extension(|"refactored.tig")> path
+      ; (params, body, target-dec-occ) := <exec-get-function(|analysis, selected-id)> ast
+      ;	check-recursive(|analysis, target-dec-occ, body, params) 
+      ; inlined-ast := <inline-all-calls(|analysis, target-dec-occ, body, params)> ast  
+      ; cleaned-ast := <delete-fun-dec(|target-dec-occ)> inlined-ast      
+      ; result := cleaned-ast
        
 rules  //inlining steps
   exec-get-function(|analysis, selected-id): ast -> (params, body, target-dec-occ)
     where
     	selected-term := <collect-one(get-term-from-id(|selected-id))> ast
       ; target-dec-occ := <collect-one(get-declaration(|analysis)) > selected-term
+      //; (_, function-scope) := <nabl2-get-assoc-edges(|analysis)> target-dec-occ
+      //; <ppdebug(|"associated-scope: ")> function-scope
       ; (params, body) := <collect-one(get-function(|target-dec-occ))> ast
       
   inline-this-function-call(|selected-id, body, params): ast -> inlined-ast

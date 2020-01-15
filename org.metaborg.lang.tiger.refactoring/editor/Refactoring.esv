@@ -10,5 +10,8 @@ menus
   
     action: "Rename" = rename-action
     action: "Inline This Function Call" = inline-call-action
+    action: "Inline This Function Call - AST" = inline-call-action-ast
     action: "Inline Function" = inline-function-action
+    action: "Inline Function - AST" =  inline-function-action-ast
     action: "Extract Function" = extract-function-action
+   

@@ -3,8 +3,11 @@ module refactoring-util
 imports 
 	signatures/-
 	nabl2/api
+	nabl2/runtime/analysis/-
 	pp
 	libspoofax/stratego/debug
+	
+
 
 rules     
 	check-ref-occ(|analysis, namespace, name, target-dec-occ) =
@@ -20,41 +23,48 @@ rules
     ; dec-occ := <nabl2-mk-occurrence(|namespace)> name
   	; <?dec-occ> target-dec-occ
   	
-rules //check-capture-rename
+rules //name binding
 
 	get-all-name-bindings(|analysis): ast -> name-bindings
 	where
 		name-bindings := <collect-all(get-name-binding(|analysis))> ast
+		
+	get-name-binding-indexes: name-bindings -> name-binding-indexes
+	where
+		name-binding-indexes := <map(get-name-binding-index)> name-bindings
+		
+  get-name-binding(|analysis, namespace): name -> (ref, dec)
+	where
+		ref-occ := <nabl2-mk-occurrence(|namespace)> name
+		; (dec-occ, _) := <nabl2-get-resolved-name(|analysis)> ref-occ
+		; TermIndex(ref-path, ref-index) := <nabl2-get-occurrence-index> ref-occ
+		; TermIndex(dec-path, dec-index) := <nabl2-get-occurrence-index> dec-occ
+		; ref := (<strip-annos> name, ref-index)
+		; dec := (<strip-annos> name, dec-index)
+	
+	get-name-binding-index: ((ref-name, ref-index), (dec-name, dec-index)) -> (ref-index,dec-index)	
     
 rules //get-name-binding    
 
   get-name-binding(|analysis): Var(name) ->  name-binding
   where
-  	name-binding := <get-dec-ref-pair(|analysis, "Var")> name
+  	name-binding := <get-name-binding(|analysis, "Var")> name
 		
   get-name-binding(|analysis): Tid(name) -> name-binding
   where
-  	name-binding := <get-dec-ref-pair(|analysis, "Type")> name
+  	name-binding := <get-name-binding(|analysis, "Type")> name
     
 	get-name-binding(|analysis): Call(name, args) -> name-binding 
 	where
-		name-binding := <get-dec-ref-pair(|analysis, "Var")> name
+		name-binding := <get-name-binding(|analysis, "Var")> name
 		
 	get-name-binding(|analysis): InitField(name, exp) -> name-binding
 	where
-		name-binding := <get-dec-ref-pair(|analysis, "Var")> name
+		name-binding := <get-name-binding(|analysis, "Var")> name
   
   get-name-binding(|analysis): FieldVar(type-var, name) -> name-binding
   where
-   name-binding := <get-dec-ref-pair(|analysis, "Var")> name
-  
-rules 
-	get-dec-ref-pair(|analysis, namespace): name -> (ref-index, dec-index)
-	where
-		ref-occ := <nabl2-mk-occurrence(|namespace)> name
-		; (dec-occ, _) := <nabl2-get-resolved-name(|analysis)> ref-occ
-		; ref-index := <nabl2-get-occurrence-index> ref-occ
-		; dec-index := <nabl2-get-occurrence-index> dec-occ
+   name-binding := <get-name-binding(|analysis, "Var")> name
 		
 rules //get-declaration 
 

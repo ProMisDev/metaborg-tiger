@@ -31,7 +31,10 @@ rules  //renaming steps
   check-capture(|renamed-ast, target-dec-occ, new-name, old-name-bindings, path) =
   		(new-renamed-ast, new-analysis, _, _, _) := <nabl2-analyze-ast(|path)> renamed-ast
   		; new-name-bindings := <get-all-name-bindings(|new-analysis)> new-renamed-ast
-  		; <eq <+ ppdebug(|"ERROR: Capture detected ") ; fail> (old-name-bindings, new-name-bindings)
+  		; old-name-binding-indexes := <get-name-binding-indexes> old-name-bindings
+  		; new-name-binding-indexes := <get-name-binding-indexes> new-name-bindings
+  		; <eq <+ ppdebug(|"ERROR: Capture detected ") ; fail> (old-name-binding-indexes, new-name-binding-indexes)
+  		
     
 rules //rename    
 

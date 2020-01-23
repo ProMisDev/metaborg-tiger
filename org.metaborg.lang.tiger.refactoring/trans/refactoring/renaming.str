@@ -3,30 +3,77 @@ module renaming
 imports 
 	signatures/-
 	nabl2/api
+	nabl2/shared/-
 	pp
 	libspoofax/stratego/debug
 	refactoring/refactoring-util
+	
+
 
 rules // menu action strategies
   rename-action :
-    (selected-id, _, ast, path, project-path) -> (filename, result)
+    (selected-term, _, ast, path, project-path) -> (filename, result)
     where
     	analysis := <nabl2-get-ast-analysis> ast;
       <not(nabl2-analysis-has-errors)> analysis
     with
-      filename := <guarantee-extension(|"refactored.tig")> path
-    ; selected-term := <collect-one(get-term-from-id(|selected-id))> ast
-    ; target-dec-occ := <get-declaration(|analysis)> selected-term
-		; new-name := <read-config-file> ($[[project-path]/[path].rfac], "refactoring.rename")    
+    <not(eq) <+ ppdebug(|"ERROR: No occurrence selected ") ; fail> (selected-term, ast)
+    ; decs := <nabl2-get-all-decls(|analysis)> ast
+    ; refs  := <nabl2-get-all-refs(|analysis)> ast
+    ; occs := <conc> (decs, refs)
+    ; <ppdebug(|"selected-term: ")> selected-term
+    ; selected-occ := <collect-one(get-occurrence(|occs))> selected-term
+    ; <ppdebug(|"selected-occ: ")> selected-occ
+    ; target-dec-occ := <get-target-dec-occ(|analysis, decs, refs)> selected-occ
+    ; <ppdebug(|"target-dec-occ: ")> target-dec-occ
+    ; target-ref-occs := <filter(resolves-to-dec(|analysis,target-dec-occ))> refs
+    ; <ppdebug(|"target-ref-occs: ")> target-ref-occs
+    ; target-occs := <add-elem> (target-dec-occ, target-ref-occs)
+    ; <ppdebug(|"target-occs: ")> target-occs
+    ; target-indices := <map(get-term-index-from-occ)> target-occs
+    ; <ppdebug(|"target-indices ")> target-indices
+		; new-name := <read-config-file> ($[[project-path]/[path].rfac], "refactoring.rename")
+		; renamed-ast := <bottomup(try(rename(|target-indices, new-name)))> ast
+		/*    
     ; (old-name-bindings, renamed-ast) := <exec-rename(|analysis, target-dec-occ, new-name)> ast
     ; check-capture(|renamed-ast, target-dec-occ, new-name, old-name-bindings, path)
+    */
+    ; filename := <guarantee-extension(|"refactored.tig")> path
     ; result := <pp-Tiger-string> renamed-ast
     
+rules
+	get-occurrence(|occs): t -> occurrence
+	where
+		<is-string> t
+		; term-index := <nabl2-get-ast-index> t
+		; occurrence := <fetch-elem(occ-eq-term-index(|term-index))> occs
+		
+	occ-eq-term-index(|target-term-index): occ@Occurrence(_, _, term-index) -> occ
+	where
+		<?target-term-index> term-index
+		
+  get-target-dec-occ(|analysis, decs, refs): selected-occ -> target-dec-occ
+  where
+  	if <elem> (selected-occ, decs) then
+  		target-dec-occ := selected-occ
+  	else
+  		(target-dec-occ, _) := <nabl2-get-resolved-name(|analysis)> selected-occ
+  	end
+  	
+  resolves-to-dec(|analysis, target-dec-occ): ref-occ -> ref-occ
+  where
+  	(dec-occ, _) := <nabl2-get-resolved-name(|analysis)> ref-occ
+  	; <?target-dec-occ> dec-occ
+		
+	get-term-index-from-occ: Occurrence(_, _, term-index) -> term-index
+		
+    
 rules  //renaming steps
+  
 	exec-rename(|analysis, target-dec-occ, new-name): ast -> (old-name-bindings, renamed-ast)
 	 where
 	    old-name-bindings := <get-all-name-bindings(|analysis)> ast
-    	; renamed-ast := <topdown(try(rename(|analysis, target-dec-occ, new-name)))> ast
+    	; renamed-ast := <bottomup(try(rename(|target-dec-occ, new-name)))> ast
     	
   check-capture(|renamed-ast, target-dec-occ, new-name, old-name-bindings, path) =
   		(new-renamed-ast, new-analysis, _, _, _) := <nabl2-analyze-ast(|path)> renamed-ast
@@ -34,62 +81,14 @@ rules  //renaming steps
   		; old-name-binding-indexes := <get-name-binding-indexes> old-name-bindings
   		; new-name-binding-indexes := <get-name-binding-indexes> new-name-bindings
   		; <eq <+ ppdebug(|"ERROR: Capture detected ") ; fail> (old-name-binding-indexes, new-name-binding-indexes)
+  
   		
     
 rules //rename    
 
-	//Variable
-  rename(|analysis, target-dec-occ, target-name): VarDecNoType(name, exp) -> VarDecNoType(target-name, exp)
+  rename(|target-indices, new-name): t -> new-name
 	where
-	 check-dec-occ(|"Var", name, target-dec-occ)
-  		
-  rename(|analysis, target-dec-occ, target-name): VarDec(name, type, exp) -> VarDec(target-name, type, exp)
-	where
-		check-dec-occ(|"Var", name, target-dec-occ)
-  		
-  rename(|analysis, target-dec-occ, target-name): Var(name) -> Var(target-name)
-	where
-   check-ref-occ(|analysis, "Var", name, target-dec-occ)
-
-  //Type
-  rename(|analysis, target-dec-occ, target-name): TypeDec(name, type) -> TypeDec(target-name, type)
-	where
-		check-dec-occ(|"Type", name, target-dec-occ)
-		
-  rename(|analysis, target-dec-occ, target-name): Tid(name) -> Tid(target-name)
-	where
-    check-ref-occ(|analysis, "Type", name, target-dec-occ)
-    
-  //Function
-  rename(|analysis, target-dec-occ, target-name): ProcDec(name, args, body) -> ProcDec(target-name, args, body)
-	where
-		check-dec-occ(|"Var", name, target-dec-occ)
-  		
-  rename(|analysis, target-dec-occ, target-name): FunDec(name, args, type, body) -> FunDec(target-name, args, type, body)
-	where
-		check-dec-occ(|"Var", name, target-dec-occ)
-		
-	rename(|analysis, target-dec-occ, target-name): Call(name, args) -> Call(target-name, args)
-	where
-    check-ref-occ(|analysis, "Var", name, target-dec-occ)
-    
-  //Function Argument
-  rename(|analysis, target-dec-occ, target-name): FArg(name, type) -> FArg(target-name, type)
-	where
-		check-dec-occ(|"Var", name, target-dec-occ) 
-		
-  //Field
-  rename(|analysis, target-dec-occ, target-name): Field(name, type) -> Field(target-name, type)
-	where
-		check-dec-occ(|"Field", name, target-dec-occ)
-		
-	rename(|analysis, target-dec-occ, target-name): InitField(name, exp) -> InitField(target-name, exp)
-	where
-    check-ref-occ(|analysis, "Field", name, target-dec-occ)
-  
-  rename(|analysis, target-dec-occ, target-name): FieldVar(type-var, name) -> FieldVar(type-var, target-name)
-	where
-    check-ref-occ(|analysis, "Field", name, target-dec-occ)
-
-
-	
+		<is-string> t
+	 	; term-index := <nabl2-get-ast-index> t
+	  ; <elem> (term-index, target-indices)
+	 	

@@ -199,6 +199,9 @@ rules //list utitily functions
 		length := <length> list
 		; <eq> (length, 0)
 		
+	add-elem: (new-elem, list) -> [new-elem | list]
+		
+		
 rules //Other utility functions
 	eq-no-annos: (term1, term2) -> (term1, term2) 
 		where

@@ -85,6 +85,8 @@ rules
     	; if capture-expected 
     	  then not(check-capture(|renamed-ast, target-dec-occ, new-name, old-occ-count, path))
     	  else  check-capture(|renamed-ast, target-dec-occ, new-name, old-occ-count, path) end
+    	  
+  exec-rename(|analysis, target-dec-occ, new-name): ast -> (analysis, new-name)
 		  
 rules //get-declaration-test
 	get-declaration-test(|target-name, namespace): VarDecNoType(name, exp) -> dec-occ

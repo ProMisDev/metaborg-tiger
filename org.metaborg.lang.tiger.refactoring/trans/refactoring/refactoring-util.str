@@ -6,9 +6,8 @@ imports
 	nabl2/runtime/analysis/-
 	pp
 	libspoofax/stratego/debug
+	libstratego-lib
 	
-
-
 rules     
 	check-ref-occ(|analysis, namespace, name, target-dec-occ) =
 		occ-name := <nabl2-get-occurrence-name> target-dec-occ
@@ -27,44 +26,29 @@ rules //name binding
 
 	get-all-name-bindings(|analysis): ast -> name-bindings
 	where
-		name-bindings := <collect-all(get-name-binding(|analysis))> ast
+		refs  := <nabl2-get-all-refs(|analysis)> ast
+		; name-bindings := <map(get-dec-ref-pair(|analysis))> refs
+		; <ppdebug(|"name-bindings: ")> name-bindings
 		
-	get-name-binding-indexes: name-bindings -> name-binding-indexes
+	get-dec-ref-pair(|analysis): ref -> (ref, dec)
+	where
+		(dec, _) := <nabl2-get-resolved-name(|analysis)> ref
+		
+	get-name-binding-indexes: name-bindings -> sorted-indexes
 	where
 		name-binding-indexes := <map(get-name-binding-index)> name-bindings
-		
-  get-name-binding(|analysis, namespace): name -> (ref, dec)
-	where
-		ref-occ := <nabl2-mk-occurrence(|namespace)> name
-		; (dec-occ, _) := <nabl2-get-resolved-name(|analysis)> ref-occ
-		; TermIndex(ref-path, ref-index) := <nabl2-get-occurrence-index> ref-occ
-		; TermIndex(dec-path, dec-index) := <nabl2-get-occurrence-index> dec-occ
-		; ref := (<strip-annos> name, ref-index)
-		; dec := (<strip-annos> name, dec-index)
+		; sorted-indexes := <qsort(dec-ref-pair-gt)> name-binding-indexes
 	
-	get-name-binding-index: ((ref-name, ref-index), (dec-name, dec-index)) -> (ref-index,dec-index)	
-    
-rules //get-name-binding    
-
-  get-name-binding(|analysis): Var(name) ->  name-binding
-  where
-  	name-binding := <get-name-binding(|analysis, "Var")> name
-		
-  get-name-binding(|analysis): Tid(name) -> name-binding
-  where
-  	name-binding := <get-name-binding(|analysis, "Type")> name
-    
-	get-name-binding(|analysis): Call(name, args) -> name-binding 
+	get-name-binding-index: (Occurrence(ref-ns, ref-name, ref-index), Occurrence(dec-ns, dec-name, dec-index)) 
+														-> (ref-index, dec-index)	
+														
+	dec-ref-pair-gt: ((ref-1, dec-1), (ref-2, dec-2)) -> <id>
 	where
-		name-binding := <get-name-binding(|analysis, "Var")> name
-		
-	get-name-binding(|analysis): InitField(name, exp) -> name-binding
-	where
-		name-binding := <get-name-binding(|analysis, "Var")> name
-  
-  get-name-binding(|analysis): FieldVar(type-var, name) -> name-binding
-  where
-   name-binding := <get-name-binding(|analysis, "Var")> name
+		<term-index-gt> (ref-1, ref-2)
+														
+	term-index-gt: (TermIndex(path-1, num-index-1), TermIndex(path-2, num-index-2)) -> <id>
+	where 
+		<gt> (num-index-1, num-index-2)
 		
 rules //get-declaration 
 
@@ -206,6 +190,8 @@ rules //Other utility functions
 	eq-no-annos: (term1, term2) -> (term1, term2) 
 		where
 		  <eq> (<strip-annos> term1, <strip-annos> term2) 
+		  
+	log-error-on-fail(s|error-msg) = s <+ ppdebug(|error-msg); fail
 		  
 rules // external rules
 	external read-config-file(|)

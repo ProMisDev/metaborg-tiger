@@ -7,7 +7,6 @@ imports
 	pp
 	libspoofax/stratego/debug
 	refactoring/refactoring-util
-	
 
 
 rules // menu action strategies
@@ -17,7 +16,7 @@ rules // menu action strategies
     	analysis := <nabl2-get-ast-analysis> ast;
       <not(nabl2-analysis-has-errors)> analysis
     with
-    <not(eq) <+ ppdebug(|"ERROR: No occurrence selected ") ; fail> (selected-term, ast)
+    <log-error-on-fail(not(eq)|"ERROR: No occurrence selected ")> (selected-term, ast)
     ; decs := <nabl2-get-all-decls(|analysis)> ast
     ; refs  := <nabl2-get-all-refs(|analysis)> ast
     ; occs := <conc> (decs, refs)
@@ -33,11 +32,9 @@ rules // menu action strategies
     ; target-indices := <map(get-term-index-from-occ)> target-occs
     ; <ppdebug(|"target-indices ")> target-indices
 		; new-name := <read-config-file> ($[[project-path]/[path].rfac], "refactoring.rename")
+		; old-name-bindings := <get-all-name-bindings(|analysis)> ast
 		; renamed-ast := <bottomup(try(rename(|target-indices, new-name)))> ast
-		/*    
-    ; (old-name-bindings, renamed-ast) := <exec-rename(|analysis, target-dec-occ, new-name)> ast
     ; check-capture(|renamed-ast, target-dec-occ, new-name, old-name-bindings, path)
-    */
     ; filename := <guarantee-extension(|"refactored.tig")> path
     ; result := <pp-Tiger-string> renamed-ast
     
@@ -66,25 +63,15 @@ rules
   	; <?target-dec-occ> dec-occ
 		
 	get-term-index-from-occ: Occurrence(_, _, term-index) -> term-index
-		
-    
-rules  //renaming steps
-  
-	exec-rename(|analysis, target-dec-occ, new-name): ast -> (old-name-bindings, renamed-ast)
-	 where
-	    old-name-bindings := <get-all-name-bindings(|analysis)> ast
-    	; renamed-ast := <bottomup(try(rename(|target-dec-occ, new-name)))> ast
-    	
+		 
   check-capture(|renamed-ast, target-dec-occ, new-name, old-name-bindings, path) =
   		(new-renamed-ast, new-analysis, _, _, _) := <nabl2-analyze-ast(|path)> renamed-ast
   		; new-name-bindings := <get-all-name-bindings(|new-analysis)> new-renamed-ast
   		; old-name-binding-indexes := <get-name-binding-indexes> old-name-bindings
+  		; <ppdebug(|"old-name-binding-indexes: ")> old-name-binding-indexes
   		; new-name-binding-indexes := <get-name-binding-indexes> new-name-bindings
-  		; <eq <+ ppdebug(|"ERROR: Capture detected ") ; fail> (old-name-binding-indexes, new-name-binding-indexes)
-  
-  		
-    
-rules //rename    
+  		; <ppdebug(|"new-name-binding-indexes: ")> new-name-binding-indexes 
+  		; <log-error-on-fail(eq|"ERROR: Capture detected ")> (old-name-binding-indexes, new-name-binding-indexes)
 
   rename(|target-indices, new-name): t -> new-name
 	where

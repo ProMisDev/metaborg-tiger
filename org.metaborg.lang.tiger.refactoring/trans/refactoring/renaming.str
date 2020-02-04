@@ -28,17 +28,6 @@ rules // menu action strategies
     ; result := <pp-Tiger-string> renamed-ast
     
 rules // renaming steps
-	collect-occs(|analysis): ast -> (occs, decs, refs)
-	where
-		decs := <nabl2-get-all-decls(|analysis)> ast
-    ; refs  := <nabl2-get-all-refs(|analysis)> ast
-    ; occs := <conc> (decs, refs)
-    
-	get-target-dec-occ(|analysis, occs, decs): selected-term -> target-dec-occ
-	where
-		selected-occ := <collect-one(get-occurrence(|occs))> selected-term
-    ; target-dec-occ := <resolve-selected-occ(|analysis, decs)> selected-occ
-    
   get-target-indices(|analysis, refs): target-dec-occ -> target-indices
   where
   	target-ref-occs := <filter(resolves-to-dec(|analysis, target-dec-occ))> refs
@@ -58,29 +47,8 @@ rules // renaming steps
 		; new-name-binding-indexes := <get-name-binding-indexes> new-name-bindings
 		; <log-error-on-fail(eq|"ERROR: Capture detected ")> (old-name-binding-indexes, new-name-binding-indexes)
     
-rules
-	get-occurrence(|occs): t -> occurrence
-	where
-		<is-string> t
-		; term-index := <nabl2-get-ast-index> t
-		; occurrence := <fetch-elem(occ-eq-term-index(|term-index))> occs
-		
-	occ-eq-term-index(|target-term-index): occ@Occurrence(_, _, term-index) -> occ
-	where
-		<?target-term-index> term-index
-		
-  resolve-selected-occ(|analysis, decs): selected-occ -> target-dec-occ
-  where
-  	if <elem> (selected-occ, decs) then
-  		target-dec-occ := selected-occ
-  	else
-  		(target-dec-occ, _) := <nabl2-get-resolved-name(|analysis)> selected-occ
-  	end
-  	
+rules  	
   resolves-to-dec(|analysis, target-dec-occ): ref-occ -> ref-occ
   where
   	(dec-occ, _) := <nabl2-get-resolved-name(|analysis)> ref-occ
-  	; <?target-dec-occ> dec-occ
-		
-	get-term-index-from-occ: Occurrence(_, _, term-index) -> term-index
-	 	
+  	; <?target-dec-occ> dec-occ	 	

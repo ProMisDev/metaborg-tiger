@@ -3,9 +3,14 @@ module inline-function
 imports 
 	signatures/-
 	nabl2/api
+	nabl2/runtime/analysis/-
 	pp
 	libspoofax/stratego/debug
 	refactoring/refactoring-util
+	
+signature
+  constructors
+    TermOrigin: Path * Index -> TermOrigin
 
 rules // menu action strategies
   inline-call-action :
@@ -37,31 +42,36 @@ rules // menu action strategies
       filename := <guarantee-extension(|"refactored.tig")> path
       ; (params, body, target-dec-occ) := <exec-get-function(|analysis, selected-id)> ast
       ;	check-recursive(|analysis, target-dec-occ, body, params) 
-      ; inlined-ast := <inline-all-calls(|analysis, target-dec-occ, body, params)> ast  
-      ; cleaned-ast := <delete-fun-dec(|target-dec-occ)> inlined-ast      
+      ; old-name-bindings := <get-all-name-bindings(|analysis)> ast
+      ; ast' := <record-origin> ast
+      ; inlined-ast := <inline-all-calls(|analysis, target-dec-occ, body, params)> ast' 
+      ; cleaned-ast := <delete-fun-dec(|target-dec-occ)> inlined-ast  
+      ; check-capture(|cleaned-ast, old-name-bindings, path)
       ; result := <pp-Tiger-string> cleaned-ast
-      
+            
   inline-function-action-ast :
     (selected-id, _, ast, path, project-path) -> (filename, result)
     where
     	analysis := <nabl2-get-ast-analysis> ast;
       <not(nabl2-analysis-has-errors)> analysis
     with
-      filename := <guarantee-extension(|"refactored.tig")> path
-      ; (params, body, target-dec-occ) := <exec-get-function(|analysis, selected-id)> ast
+			filename := <guarantee-extension(|"refactored.aterm")> path
+			; ast' := <record-origin> ast
+      ; (params, body, target-dec-occ) := <exec-get-function(|analysis, selected-id)> ast'
       ;	check-recursive(|analysis, target-dec-occ, body, params) 
-      ; inlined-ast := <inline-all-calls(|analysis, target-dec-occ, body, params)> ast  
-      ; cleaned-ast := <delete-fun-dec(|target-dec-occ)> inlined-ast      
-      ; result := cleaned-ast
+      ; inlined-ast := <inline-all-calls(|analysis, target-dec-occ, body, params)> ast' 
+      ; cleaned-ast := <delete-fun-dec(|target-dec-occ)> inlined-ast  
+      ;	(new-inlined-ast, new-analysis, _, _, _) := <nabl2-analyze-ast(|path)> cleaned-ast
+      ; result := new-inlined-ast
        
 rules  //inlining steps
-  exec-get-function(|analysis, selected-id): ast -> (params, body, target-dec-occ)
+  exec-get-function(|analysis, selected-term): ast -> (params, body, target-dec-occ)
     where
-    	selected-term := <collect-one(get-term-from-id(|selected-id))> ast
-      ; target-dec-occ := <collect-one(get-declaration(|analysis)) > selected-term
-      //; (_, function-scope) := <nabl2-get-assoc-edges(|analysis)> target-dec-occ
-      //; <ppdebug(|"associated-scope: ")> function-scope
-      ; (params, body) := <collect-one(get-function(|target-dec-occ))> ast
+    	(occs, decs, refs) := <collect-occs(|analysis)> ast
+    	; target-dec-occ := <get-target-dec-occ(|analysis, occs, decs)> selected-term 
+    	; <ppdebug(|"target-dec-occ: ")> target-dec-occ
+    	; target-term-index := <get-term-index-from-occ> target-dec-occ
+      ; (params, body) := <collect-one(get-function(|target-term-index))> ast
       
   inline-this-function-call(|selected-id, body, params): ast -> inlined-ast
     where
@@ -78,20 +88,30 @@ rules  //inlining steps
 		where
 			cleaned-ast := <topdown(try(delete-function(|target-dec-occ)))> ast
 			; cleaned-ast-2 := <topdown(try(delete-empty-fun-decs))> cleaned-ast
+			
+	check-capture(|inlined-ast, old-name-bindings, path) =
+		(new-inlined-ast, new-analysis, _, _, _) := <nabl2-analyze-ast(|path)> inlined-ast
+		; new-name-bindings := <get-all-name-bindings(|new-analysis)> new-inlined-ast
+//		; old-name-binding-indexes := <get-name-binding-indexes> old-name-bindings
+//		; new-name-binding-indexes := <get-name-binding-indexes> new-name-bindings
+//		; <log-error-on-fail(eq|"ERROR: Capture detected ")> (old-name-binding-indexes, new-name-binding-indexes)
+
+	get-function-dec-occ(|analysis, refs, selected-id): Call(name, args) -> target-dec-occ
+	where
+		term-index := <nabl2-get-ast-index> name
+		; ref-occ := <fetch-elem(occ-eq-term-index(|term-index))> refs
+    ; (target-dec-occ, _) := <nabl2-get-resolved-name(|analysis)> ref-occ
       
-rules //get-function-declaration
-	get-function-declaration(|analysis, selected-id): Call(name, args) -> dec-occ
-	where
-	  dec-occ := <get-dec-from-ref(|analysis, "Var")> name
-	  
 rules //get-function
-  get-function(|target-dec-occ): node@FunDec(name, params, type, body) -> (params, body)
+  get-function(|target-term-index): FunDec(name, params, type, body) -> (params, body)
 	where
-		check-dec-occ(|"Var", name, target-dec-occ)
+		term-index := <nabl2-get-ast-index> name
+    ; <eq> (term-index, target-term-index)
 		
-  get-function(|target-dec-occ): ProcDec(name, params, body) -> (params, body)
+  get-function(|target-term-index): ProcDec(name, params, body) -> (params, body)
 	where
-		check-dec-occ(|"Var", name, target-dec-occ)
+		term-index := <nabl2-get-ast-index> name
+    ; <eq> (term-index, target-term-index)
 		
 rules //replace-this-call
   replace-this-call(|select-id, body, params): Call(name, args) -> Let(vars, [body])
@@ -108,15 +128,18 @@ rules //replace-call
 rules //delete-function-dec
 	delete-function(|target-dec-occ): FunDecs(funDecs) -> FunDecs(reducedFunDecs)
 	where
-	  reducedFunDecs := <filter(delete-function-dec(|target-dec-occ))> funDecs
+		target-term-index := <get-term-index-from-occ> target-dec-occ
+	  ;reducedFunDecs := <filter(delete-function-dec(|target-term-index))> funDecs
 	    
-  delete-function-dec(|target-dec-occ): fun@FunDec(name, params, type, body) -> fun
+  delete-function-dec(|target-term-index): fun@FunDec(name, params, type, body) -> fun
   where
-    not(check-dec-occ(|"Var", name, target-dec-occ))
+  	term-index := <nabl2-get-ast-index> name
+    ; <not(eq)> (term-index, target-term-index)
     
-  delete-function-dec(|target-dec-occ): proc@ProcDec(name, params, body) -> proc
+  delete-function-dec(|target-term-index): proc@ProcDec(name, params, body) -> proc
   where
-    not(check-dec-occ(|"Var", name, target-dec-occ))
+   term-index := <nabl2-get-ast-index> name
+   ; <not(eq)> (term-index, target-term-index)
     
   delete-empty-fun-decs: Let(decs, exps) -> Let(cleanedDecs, exps)
   where
@@ -124,5 +147,9 @@ rules //delete-function-dec
   
 rules //create-var-dec
 	create-var-dec : (FArg(name, tid), exp) -> VarDec(name, tid, exp)
-
+	
+rules // origin recording
+   record-origin = bottomup(try(add-origin-anno))
+   
+   add-origin-anno: t{a@TermIndex(path, num-index)} -> t{a,TermOrigin(path, num-index)}
 		

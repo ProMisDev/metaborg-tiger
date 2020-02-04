@@ -20,15 +20,28 @@ rules
 		occ-name := <nabl2-get-occurrence-name> target-dec-occ		
 		; <eq-no-annos> (occ-name, name) 
     ; dec-occ := <nabl2-mk-occurrence(|namespace)> name
+    ; <ppdebug(|"dec-occ: ")> dec-occ
   	; <?dec-occ> target-dec-occ
   	
+  get-target-dec-occ(|analysis, occs, decs): selected-term -> target-dec-occ
+	where
+		selected-occ := <collect-one(get-occurrence(|occs))> selected-term
+    ; target-dec-occ := <resolve-selected-occ(|analysis, decs)> selected-occ
+    
+  resolve-selected-occ(|analysis, decs): selected-occ -> target-dec-occ
+  where
+  	if <elem> (selected-occ, decs) then
+  		target-dec-occ := selected-occ
+  	else
+  		(target-dec-occ, _) := <nabl2-get-resolved-name(|analysis)> selected-occ
+  	end
+    
 rules //name binding
 
 	get-all-name-bindings(|analysis): ast -> name-bindings
 	where
 		refs  := <nabl2-get-all-refs(|analysis)> ast
 		; name-bindings := <map(get-dec-ref-pair(|analysis))> refs
-		; <ppdebug(|"name-bindings: ")> name-bindings
 		
 	get-dec-ref-pair(|analysis): ref -> (ref, dec)
 	where
@@ -168,6 +181,27 @@ rules //get-term-from-id
 	get-term-from-id(|selected-id): term@FieldVar(type-var, name) -> term
 	where
 		<?selected-id> name
+		
+	
+rules // occurrence utility functions
+
+	collect-occs(|analysis): ast -> (occs, decs, refs)
+	where
+		decs := <nabl2-get-all-decls(|analysis)> ast
+    ; refs  := <nabl2-get-all-refs(|analysis)> ast
+    ; occs := <conc> (decs, refs)
+    
+	get-occurrence(|occs): t -> occurrence
+	where
+		<is-string> t
+		; term-index := <nabl2-get-ast-index> t
+		; occurrence := <fetch-elem(occ-eq-term-index(|term-index))> occs
+			
+	occ-eq-term-index(|target-term-index): occ@Occurrence(_, _, term-index) -> occ
+	where
+		<?target-term-index> term-index
+		
+	get-term-index-from-occ: Occurrence(_, _, term-index) -> term-index
 		  
 rules //list utitily functions
 	make-list: term -> list

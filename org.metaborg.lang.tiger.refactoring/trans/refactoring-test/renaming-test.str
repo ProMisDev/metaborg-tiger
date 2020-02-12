@@ -5,7 +5,6 @@ imports
 	nabl2/api
 	pp
 	libspoofax/stratego/debug
-	refactoring/renaming-util
 	refactoring/renaming
 	
 
@@ -72,20 +71,20 @@ rules
     	analysis := <nabl2-get-ast-analysis> ast;
       <not(nabl2-analysis-has-errors)> analysis
     with
-		(occs, decs, refs) := <collect-occs(|analysis)> ast
-    ; target-dec-occ := <get-target-dec-occ-test(|analysis, occs, decs, old-name)> ast 
-    ; target-indices := <get-target-indices(|analysis, refs)> target-dec-occ
+    target-dec-occ := <get-target-dec-occ-test(|analysis, old-name)> ast 
+    ; target-indices := <get-target-indices(|analysis)> target-dec-occ
 		; old-name-bindings := <get-all-name-bindings(|analysis)> ast
-		; renamed-ast := <bottomup(try(rename(|target-indices, new-name)))> ast
+		; renamed-ast := <rename-ast(|target-indices, new-name)> ast
 		; if capture-expected
 		then not(check-capture(|renamed-ast, old-name-bindings, path))
 		else check-capture(|renamed-ast, old-name-bindings, path) end
     ; result := renamed-ast
     	  
-  get-target-dec-occ-test(|analysis, occs, decs, old-name): ast -> target-dec-occ
+  get-target-dec-occ-test(|analysis, old-name): ast -> target-dec-occ
 	where
-		selected-occ := <collect-one(get-occurrence-test(|occs, old-name))> ast
-    ; target-dec-occ := <resolve-selected-occ(|analysis, decs)> selected-occ
+		occs := <get-all-occs(|analysis)> analysis
+		; selected-occ := <collect-one(get-occurrence-test(|occs, old-name))> ast
+    ; target-dec-occ := <resolve-occ(|analysis)> selected-occ
     
   get-occurrence-test(|occs, old-name): t -> occurrence
 	where
@@ -93,4 +92,8 @@ rules
 		; <eq-no-annos> (old-name, t)
 		; term-index := <nabl2-get-ast-index> t
 		; occurrence := <fetch-elem(occ-eq-term-index(|term-index))> occs
+		
+	eq-no-annos: (term1, term2) -> (term1, term2) 
+	where
+	  <eq> (<strip-annos> term1, <strip-annos> term2) 
     

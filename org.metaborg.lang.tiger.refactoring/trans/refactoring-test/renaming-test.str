@@ -5,7 +5,7 @@ imports
 	nabl2/api
 	pp
 	libspoofax/stratego/debug
-	refactoring/refactoring-util
+	refactoring/renaming-util
 	refactoring/renaming
 	
 
@@ -14,56 +14,56 @@ rules // rules called by spt
     where
       old-name := "msg"
       ; new-name := "message"
-      ; path := "test/renaming/variables.spt"
+      ; path := "test/variables.spt"
     	; result := <rename-action-test(fail | old-name, new-name, path)> ast
     	
   rename-test-var-capture : ast -> result
     where
       old-name := "y"
       ; new-name := "x"
-      ; path := "test/renaming/variables.spt"
+      ; path := "test/variables.spt"
     	; result := <rename-action-test(id | old-name, new-name, path)> ast
     	
   rename-test-type : ast -> result
     where
       old-name := "student"
       ; new-name := "person"
-      ; path := "test/renaming/types.spt"
+      ; path := "test/types.spt"
     	; result := <rename-action-test(fail | old-name, new-name, path)> ast
     	
   rename-test-field : ast -> result
     where
       old-name := "name"
       ; new-name := "fullName"
-      ; path := "test/renaming/types.spt"
+      ; path := "test/types.spt"
     	; result := <rename-action-test(fail | old-name, new-name, path)> ast
  
   rename-test-function : ast -> result
     where
       old-name := "plus"
       ; new-name := "add"
-      ; path := "test/renaming/functions.spt"
+      ; path := "test/functions.spt"
     	; result := <rename-action-test(fail | old-name, new-name, path)> ast
     	
   rename-test-procedure : ast -> result
     where
       old-name := "printnl"
       ; new-name := "printNewLine"
-      ; path := "test/renaming/functions.spt"
+      ; path := "test/functions.spt"
     	; result := <rename-action-test(fail | old-name, new-name, path)> ast
 
   rename-test-farg : ast -> result
     where
       old-name := "x"
       ; new-name := "text"
-      ; path := "test/renaming/functions.spt"
+      ; path := "test/functions.spt"
     	; result := <rename-action-test(fail | old-name, new-name, path)> ast
     	
   rename-test-farg-capture : ast -> result
     where
       old-name := "d"
       ; new-name := "a"
-      ; path := "test/renaming/functions.spt"
+      ; path := "test/functions.spt"
     	; result := <rename-action-test(id | old-name, new-name, path)> ast
 
 rules     	  

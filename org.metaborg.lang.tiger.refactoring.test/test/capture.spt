@@ -1,0 +1,33 @@
+module renaming-capture
+
+language TigerRefactoring
+
+test rename variable with capture [[
+let 
+	var x := 10
+	var r := 
+	  let
+		  var y := 100
+	  in 
+		  x + y
+		end
+  in
+  	r
+end
+]] run rename-test-var-capture
+
+test rename argument with capture [[
+let 
+	function plus(a : int, b:int) : int = (
+		a + b;
+	  let
+			function plus(d:int) : int = 
+				a + d
+		in 
+		 plus(1)
+		end
+	)
+in
+   	plus(1,1)
+end
+]] run rename-test-farg-capture

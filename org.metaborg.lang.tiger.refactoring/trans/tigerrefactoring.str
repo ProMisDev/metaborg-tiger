@@ -9,9 +9,6 @@ imports
   desugar
   refactoring/renaming
   refactoring-test/renaming-test
-  refactoring/inline-function
-  refactoring-test/inline-function-test
-  refactoring/extract-function
 
   nabl2/runtime/analysis/debug
   nabl2/runtime/prelude/-

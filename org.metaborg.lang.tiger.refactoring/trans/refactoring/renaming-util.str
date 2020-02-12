@@ -1,4 +1,4 @@
-module refactoring-util
+module renaming-util
 
 imports 
 	signatures/-

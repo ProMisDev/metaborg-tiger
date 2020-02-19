@@ -3,11 +3,12 @@ module renaming
 imports 
 	signatures/-
 	nabl2/api
-	nabl2/shared/-
-	nabl2/runtime/analysis/-
 	pp
 	libspoofax/stratego/debug
-
+	libspoofax/ui/dialogs
+	
+	signatures/nabl2/shared/common/-
+  signatures/nabl2/runtime/common/-
 
 rules // menu action strategies
   rename-action :
@@ -16,33 +17,33 @@ rules // menu action strategies
     	analysis := <nabl2-get-ast-analysis> ast;
       <not(nabl2-analysis-has-errors)> analysis
     with
-    check-selection(|selected-term, ast)
-    ; target-dec-occ := <get-target-dec-occ(|analysis)> selected-term 
-    ; target-indices := <get-target-indices(|analysis)> target-dec-occ
-		; new-name := <read-new-name(|project-path)> path
-		; old-name-bindings := <get-all-name-bindings(|analysis)> ast
-		; renamed-ast := <rename-ast(|target-indices, new-name)> ast
-    ; check-capture(|renamed-ast, old-name-bindings, path)
-    ; filename := <compose-filename> path
-    ; result := <pp-Tiger-string> renamed-ast
+	    check-selection(|selected-term, ast)
+	    ; target-dec-occ := <get-target-dec-occ(|analysis)> selected-term 
+	    ; target-indices := <get-target-indices(|analysis)> target-dec-occ
+			; new-name := <read-new-name> path
+			; old-name-bindings := <get-all-name-bindings(|analysis)> ast
+			; renamed-ast := <rename-ast(|target-indices, new-name)> ast
+	    ; check-capture(|renamed-ast, old-name-bindings, path)
+	    ; filename := <compose-filename> path
+	    ; result := <pp-Tiger-string> renamed-ast
     
   rename-action-debug :
     (selected-term, _, ast, path, project-path) -> (filename, result)
     where
-    	analysis := <nabl2-get-ast-analysis> ast;
-      <not(nabl2-analysis-has-errors)> analysis
+    	analysis := <nabl2-get-ast-analysis> ast
+      ; <not(nabl2-analysis-has-errors)> analysis
     with
-    check-selection(|selected-term, ast)
-    ; target-dec-occ := <get-target-dec-occ(|analysis)> selected-term
-    ; <ppdebug(|"target-dec-occ: ")> target-dec-occ
-    ; target-indices := <get-target-indices(|analysis)> target-dec-occ
-    ; <ppdebug(|"target-indices: ")> target-indices
-		; new-name := <read-new-name(|project-path)> path
-		; old-name-bindings := <get-all-name-bindings(|analysis)> ast
-		; renamed-ast := <rename-ast(|target-indices, new-name)> ast
-    ; check-capture(|renamed-ast, old-name-bindings, path)
-    ; filename := <guarantee-extension(|"refactored.aterm")> path
-    ; result := renamed-ast
+	    check-selection(|selected-term, ast)
+	    ; target-dec-occ := <get-target-dec-occ(|analysis)> selected-term
+	    ; <ppdebug(|"target-dec-occ: ")> target-dec-occ
+	    ; target-indices := <get-target-indices(|analysis)> target-dec-occ
+	    ; <ppdebug(|"target-indices: ")> target-indices
+			; new-name := <read-new-name> path
+			; old-name-bindings := <get-all-name-bindings(|analysis)> ast
+			; renamed-ast := <rename-ast(|target-indices, new-name)> ast
+	    ; check-capture(|renamed-ast, old-name-bindings, path)
+	    ; filename := <guarantee-extension(|"refactored.aterm")> path
+	    ; result := renamed-ast
     
     
 rules // Step 1: Find target declaration
@@ -114,7 +115,7 @@ rules //Step 4: Checking for capture
 		; new-name-bindings := <get-all-name-bindings(|new-analysis)> new-renamed-ast
 		; old-name-binding-indexes := <get-name-binding-indexes> old-name-bindings
 		; new-name-binding-indexes := <get-name-binding-indexes> new-name-bindings
-		; <log-error-on-fail(eq|"ERROR: Capture detected ")> (old-name-binding-indexes, new-name-binding-indexes)
+		; <show-error-on-fail(eq|"Capture detecte", "This renaming leads to name capture")> (old-name-binding-indexes, new-name-binding-indexes)
 		
 		get-all-name-bindings(|analysis): ast -> name-bindings
 		where
@@ -150,18 +151,19 @@ rules // UI strategies
 		; new-file-extension := <conc-strings> ("refactored.", file-extension)
 		; filename := <guarantee-extension(|new-file-extension)> path
 	
-	read-new-name(|project-path) : path -> new-name
+	read-new-name: _ -> new-name
 	where 	
-   new-name := <read-config-file> ($[[project-path]/[path].rfac], "refactoring.rename")		
+   new-name := <show-input-dialog(|"Rename", "")> "Enter a new name"
    
   check-selection(|selected-term, ast) =
-    <log-error-on-fail(not(eq)|"ERROR: No occurrence selected ")> (selected-term, ast)
+    <show-error-on-fail(not(eq)|"Invalid selection", "Please select a name")> (selected-term, ast)
+    
+  show-error-on-fail(s|title, message) =
+  	s <+ <show-dialog(|title, "ERROR")> message ; fail
 		  
 rules // Utility strategies				
 	add-elem: (new-elem, list) -> [new-elem | list]
-				
-	log-error-on-fail(s|error-msg) = s <+ ppdebug(|error-msg); fail
-		  
+						  
 rules // external rules
 	external read-config-file(|)
     

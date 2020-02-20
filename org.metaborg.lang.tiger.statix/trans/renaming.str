@@ -8,6 +8,7 @@ imports
 	
 	statix/runtime/analysis
   	statix/runtime/ast
+  	statix/runtime/services
 
 rules // menu action strategies    
   rename-action-debug :
@@ -15,6 +16,8 @@ rules // menu action strategies
     where
     	analysis := <stx--get-ast-analysis> ast
     	; filename := <guarantee-extension(|"refactored.aterm")> path
+    	; resolution-relation := <collect(get-dec-ref-pair(|analysis))> ast
+    	; <ppdebug(|"resolution-relation: ")> resolution-relation
     	; result := ast
     	
     	
@@ -33,6 +36,14 @@ rules // menu action strategies
 	    ; filename := <guarantee-extension(|"refactored.aterm")> path
 	    ; result := renamed-ast
 	    */
+	    
+  get-dec-ref-pair(|analysis): ref -> (ref-index, dec-index)
+  where
+  	<is-string> ref
+  	; dec := <stx--get-ast-property(|analysis, Ref())> ref
+  	; ref-index := <stx--get-ast-index> ref
+  	; dec-index := <stx--get-ast-index> dec
+  	
     
     
 rules // Step 1: Find target declaration

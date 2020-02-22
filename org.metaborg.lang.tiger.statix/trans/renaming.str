@@ -6,9 +6,7 @@ imports
 	libspoofax/stratego/debug
 	libspoofax/ui/dialogs
 	
-	statix/runtime/analysis
-  	statix/runtime/ast
-  	statix/runtime/services
+  	statix/runtime/-
 
 rules // menu action strategies    
   rename-action-debug :
@@ -16,9 +14,16 @@ rules // menu action strategies
     where
     	analysis := <stx--get-ast-analysis> ast
     	; filename := <guarantee-extension(|"refactored.aterm")> path
-    	; resolution-relation := <collect(get-dec-ref-pair(|analysis))> ast
+    	; resolution-relation :=  <calc-resolution-relation(|analysis)> ast
     	; <ppdebug(|"resolution-relation: ")> resolution-relation
+    	; rel-length := <length> resolution-relation
+	    ; <ppdebug(|"rel-length")> rel-length
     	; result := ast
+    	
+  calc-resolution-relation(|analysis): ast -> user-defined-relation
+  where
+  	relation  := <collect(get-dec-ref-pair(|analysis))> ast
+  	; user-defined-relation := <filter(is-not-built-in)> relation
     	
     	
     	/*
@@ -41,8 +46,18 @@ rules // menu action strategies
   where
   	<is-string> ref
   	; dec := <stx--get-ast-property(|analysis, Ref())> ref
-  	; ref-index := <stx--get-ast-index> ref
-  	; dec-index := <stx--get-ast-index> dec
+  	; <ppdebug(|"def: ")> dec
+  	; ref-index@TermIndex(ref-path, _) := <stx--get-ast-index> ref
+  	; if index := <stx--get-ast-index> dec then
+  		dec-index := index
+  	  else
+  	    dec-index := TermIndex(ref-path,0)
+  	  end
+  	
+  is-not-built-in: (ref, dec@TermIndex(path, num-index)) -> <id>
+  where
+  	<not(eq)> (num-index, 0)
+  	
   	
     
     

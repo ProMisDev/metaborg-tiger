@@ -36,6 +36,8 @@ rules // menu action strategies
 	    check-selection(|selected-term, ast)
 	    ; res-rel := <calc-resolution-relation> analysis
 	    ; <ppdebug(|"res-rel: ")> res-rel
+	    ; rel-length := <length> res-rel
+	    ; <ppdebug(|"rel-length")> rel-length
 	    ; java-ret := <calc-eq-classes> res-rel
 	  //  ; <ppdebug(|"java-ret ")> java-ret
 	    ; target-dec-occ := <get-target-dec-occ(|analysis)> selected-term
@@ -93,14 +95,21 @@ rules // Step 2: Find all terms to rename
     ; target-occs := <add-elem> (target-dec-occ, target-ref-occs)
     ; target-indices := <map(get-term-index-from-occ)> target-occs
     
-  calc-resolution-relation: analysis -> relation
+  calc-resolution-relation: analysis -> user-defined-relation
   where
   	refs  := <nabl2-get-all-refs(|analysis)> analysis
-  	; relation := <map(get-dec-ref-pair(|analysis))> refs
+  	; relation := <map(get-dec-ref-index(|analysis))> refs
+  	; user-defined-relation := <filter(is-not-built-in)> relation
   	
-  get-dec-ref-pair(|analysis) : ref -> (ref, dec)
+  is-not-built-in: (ref, dec@TermIndex(path, num-index)) -> <id>
+  where
+  	<not(eq)> (num-index, 0)
+  	
+  get-dec-ref-index(|analysis) : ref -> (ref-index, dec-index)
   where
   	(dec, _) := <nabl2-get-resolved-name(|analysis)> ref
+  	; ref-index := <get-term-index-from-occ> ref
+  	; dec-index := <get-term-index-from-occ> dec
   	    
   resolves-to-dec(|analysis, target-dec-occ): ref-occ -> ref-occ
   where

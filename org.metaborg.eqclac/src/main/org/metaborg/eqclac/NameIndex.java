@@ -3,19 +3,22 @@ package org.metaborg.eqclac;
 public final class NameIndex {
 	
 	private final int numIndex;
-	private final String fileName;
+	private final String path;
 	
-	public NameIndex(int numIndex, String fileName) {
+	public NameIndex(int numIndex, String path) {
+		if (numIndex < 0 || path == null) {
+			throw new IllegalArgumentException("Invalid constructor arguments.");
+		}
 		this.numIndex = numIndex;
-		this.fileName = fileName;
+		this.path = path;
 	}
 
 	public int getNumIndex() {
 		return numIndex;
 	}
 
-	public String getFileName() {
-		return fileName;
+	public String getPath() {
+		return path;
 	}
 	
 	
@@ -30,7 +33,7 @@ public final class NameIndex {
 			return false;
 		}
 		
-		if(!other.getFileName().equals(this.fileName)) {
+		if(!other.getPath().equals(this.path)) {
 			return false;
 		}
 		

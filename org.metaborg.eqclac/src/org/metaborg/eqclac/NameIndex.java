@@ -1,4 +1,4 @@
-package edu.renaming;
+package org.metaborg.eqclac;
 
 public final class NameIndex {
 	

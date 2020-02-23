@@ -10,28 +10,28 @@ class NameIndexTest {
 	void testEqual() {
 		NameIndex index1 = new NameIndex(1, "foo");
 		NameIndex index2 = new NameIndex(1, "foo");
-		assertTrue(index1.equals(index2));
+		assertEquals(index1, index2);
 	}
 	
 	@Test
 	void testNotEqualNumIndex() {
 		NameIndex index1 = new NameIndex(1, "foo");
 		NameIndex index2 = new NameIndex(2, "foo");
-		assertFalse(index1.equals(index2));
+		assertNotEquals(index1, index2);
 	}
 	
 	@Test
 	void testNotEqualPath() {
 		NameIndex index1 = new NameIndex(1, "foo");
 		NameIndex index2 = new NameIndex(1, "bar");
-		assertFalse(index1.equals(index2));
+		assertNotEquals(index1, index2);
 	}
 	
 	@Test
 	void testNotEqualType() {
 		NameIndex index = new NameIndex(1, "foo");
 		String otherType = "foo";
-		assertFalse(index.equals(otherType));
+		assertNotEquals(index, otherType);
 	}
 	
 	@Test
@@ -48,5 +48,12 @@ class NameIndexTest {
 			 new NameIndex(1, null);
 			  });
 		
+	}
+	
+	@Test
+	void testHashCode() {
+		NameIndex index1 = new NameIndex(1, "foo");
+		NameIndex index2 = new NameIndex(1, "foo");
+		assertEquals(index1.hashCode(), index2.hashCode());
 	}
 }

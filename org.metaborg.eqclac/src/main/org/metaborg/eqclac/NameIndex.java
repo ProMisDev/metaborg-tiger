@@ -1,5 +1,7 @@
 package org.metaborg.eqclac;
 
+import java.util.Objects;
+
 public final class NameIndex {
 	
 	private final int numIndex;
@@ -38,6 +40,11 @@ public final class NameIndex {
 		}
 		
 		return true;
+	}
+	
+	@Override
+	public int hashCode() {
+		return Objects.hash(numIndex, path);
 	}
 
 }

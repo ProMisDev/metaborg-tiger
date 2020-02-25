@@ -46,5 +46,10 @@ public final class ResolutionPair {
 	public int hashCode() {
 		return Objects.hash(reference, declaration);
 	}
+	
+	@Override
+	public String toString() {
+		return "ResolutionPair(" + reference.toString() + ", " + declaration.toString() + ")";
+	}
 
 }

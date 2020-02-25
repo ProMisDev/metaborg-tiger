@@ -46,5 +46,10 @@ public final class NameIndex {
 	public int hashCode() {
 		return Objects.hash(numIndex, path);
 	}
+	
+	@Override
+	public String toString() {
+		return "NameIndex(" + path + ", " + numIndex + ")";
+	}
 
 }

@@ -56,4 +56,10 @@ class NameIndexTest {
 		NameIndex index2 = new NameIndex(1, "foo");
 		assertEquals(index1.hashCode(), index2.hashCode());
 	}
+	
+	@Test
+	void testToString() {
+		NameIndex index = new NameIndex(1, "foo");
+		assertEquals(index.toString(), "NameIndex(foo, 1)");
+	}
 }

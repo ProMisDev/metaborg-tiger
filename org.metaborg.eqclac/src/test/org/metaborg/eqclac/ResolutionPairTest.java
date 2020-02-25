@@ -86,5 +86,14 @@ class ResolutionPairTest {
 		assertEquals(pair1.hashCode(), pair2.hashCode());
 		
 	}
+	
+	@Test
+	void testToString() {
+		NameIndex ref = new NameIndex(2, "foo");
+		NameIndex dec = new NameIndex(1, "foo");
+		ResolutionPair pair = new ResolutionPair(ref, dec);
+		
+		assertEquals(pair.toString(), "ResolutionPair(NameIndex(foo, 2), NameIndex(foo, 1))");
+	}
 
 }

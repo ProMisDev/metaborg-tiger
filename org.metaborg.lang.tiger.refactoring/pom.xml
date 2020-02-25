@@ -61,4 +61,11 @@
       </snapshots>
     </pluginRepository>
   </pluginRepositories>
+  <dependencies>
+  	<dependency>
+  		<groupId>org.metaborg</groupId>
+  		<artifactId>org.metaborg.eqclac</artifactId>
+  		<version>0.1.0-SNAPSHOT</version>
+  	</dependency>
+  </dependencies>
 </project>

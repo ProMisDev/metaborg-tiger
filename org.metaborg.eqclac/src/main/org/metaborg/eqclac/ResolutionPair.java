@@ -14,6 +14,14 @@ public final class ResolutionPair {
 		this.reference = reference;
 		this.declaration = declaration;
 	}
+	
+	public ResolutionPair(String path, int refIndex, int decIndex) {
+		if(path == null || decIndex < 0 || refIndex < 0) {
+			throw new IllegalArgumentException("Invalid constructor arguments.");
+		}
+		reference = new NameIndex(refIndex, path);
+		declaration = new NameIndex(decIndex, path);
+	}
 
 	public NameIndex getReference() {
 		return reference;

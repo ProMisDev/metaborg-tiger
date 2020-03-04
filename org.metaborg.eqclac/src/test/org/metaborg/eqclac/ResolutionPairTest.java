@@ -8,48 +8,31 @@ class ResolutionPairTest {
 
 	@Test
 	void testEqual() {
-		NameIndex ref1 = new NameIndex(2, "foo");
-		NameIndex dec1 = new NameIndex(1, "foo");
-		ResolutionPair pair1 = new ResolutionPair(ref1, dec1);
-		
-		NameIndex ref2 = new NameIndex(2, "foo");
-		NameIndex dec2 = new NameIndex(1, "foo");
-		ResolutionPair pair2 = new ResolutionPair(ref2, dec2);
+		ResolutionPair pair1 = new ResolutionPair("foo", 2, 1);
+		ResolutionPair pair2 = new ResolutionPair("foo", 2, 1);
 		
 		assertEquals(pair1, pair2);
 	}
 	
 	@Test
 	void testNotEqualRef() {
-		NameIndex ref1 = new NameIndex(2, "foo");
-		NameIndex dec1 = new NameIndex(1, "foo");
-		ResolutionPair pair1 = new ResolutionPair(ref1, dec1);
-		
-		NameIndex ref2 = new NameIndex(3, "bar");
-		NameIndex dec2 = new NameIndex(1, "foo");
-		ResolutionPair pair2 = new ResolutionPair(ref2, dec2);
+		ResolutionPair pair1 = new ResolutionPair("foo", 2, 1);
+		ResolutionPair pair2 = new ResolutionPair("foo", 3, 1);
 		
 		assertNotEquals(pair1, pair2);
 	}
 	
 	@Test
 	void testNotEqualDec() {
-		NameIndex ref1 = new NameIndex(2, "foo");
-		NameIndex dec1 = new NameIndex(1, "foo");
-		ResolutionPair pair1 = new ResolutionPair(ref1, dec1);
-		
-		NameIndex ref2 = new NameIndex(2, "foo");
-		NameIndex dec2 = new NameIndex(3, "foo");
-		ResolutionPair pair2 = new ResolutionPair(ref2, dec2);
+		ResolutionPair pair1 = new ResolutionPair("foo", 2, 1);		
+		ResolutionPair pair2 = new ResolutionPair("foo", 2 ,3);
 		
 		assertNotEquals(pair1, pair2);
 	}
 	
 	@Test
 	void testNotEqualType() {
-		NameIndex ref = new NameIndex(2, "foo");
-		NameIndex dec = new NameIndex(1, "foo");
-		ResolutionPair pair = new ResolutionPair(ref, dec);
+		ResolutionPair pair = new ResolutionPair("foo", 2, 1);
 		
 		String otherType = "foo";
 		assertNotEquals(pair, otherType);
@@ -73,15 +56,31 @@ class ResolutionPairTest {
 		
 	}
 	
+	
+	@Test
+	void testConstructorOne() {
+		NameIndex ref = new NameIndex(2, "foo");
+		NameIndex dec = new NameIndex(1, "foo");
+		ResolutionPair pair = new ResolutionPair(ref, dec);
+		
+		assertEquals(ref, pair.getReference());
+		assertEquals(dec, pair.getDeclaration());
+	}
+	
+	@Test
+	void testConstructorTwo() {
+		NameIndex ref = new NameIndex(2, "foo");
+		NameIndex dec = new NameIndex(1, "foo");
+		ResolutionPair pair = new ResolutionPair("foo", 2, 1);
+		
+		assertEquals(ref, pair.getReference());
+		assertEquals(dec, pair.getDeclaration());
+	}
+	
 	@Test
 	void testHashCode() {
-		NameIndex ref1 = new NameIndex(2, "foo");
-		NameIndex dec1 = new NameIndex(1, "foo");
-		ResolutionPair pair1 = new ResolutionPair(ref1, dec1);
-		
-		NameIndex ref2 = new NameIndex(2, "foo");
-		NameIndex dec2 = new NameIndex(1, "foo");
-		ResolutionPair pair2 = new ResolutionPair(ref2, dec2);
+		ResolutionPair pair1 = new ResolutionPair("foo", 2, 1);
+		ResolutionPair pair2 = new ResolutionPair("foo", 2, 1);
 		
 		assertEquals(pair1.hashCode(), pair2.hashCode());
 		

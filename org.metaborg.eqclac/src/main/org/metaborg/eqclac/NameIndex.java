@@ -2,10 +2,20 @@ package org.metaborg.eqclac;
 
 import java.util.Objects;
 
+import org.spoofax.interpreter.core.Tools;
+import org.spoofax.interpreter.terms.IStrategoTerm;
+
 public final class NameIndex {
 	
 	private final int numIndex;
 	private final String path;
+	private IStrategoTerm termIndex;
+	
+	public NameIndex(IStrategoTerm termIndex) {
+		this.termIndex = termIndex;
+		this.path = Tools.asJavaString(termIndex.getSubterm(0));
+		this.numIndex = Tools.asJavaInt(termIndex.getSubterm(1));
+	}
 	
 	public NameIndex(int numIndex, String path) {
 		if (numIndex < 0 || path == null) {
@@ -13,6 +23,11 @@ public final class NameIndex {
 		}
 		this.numIndex = numIndex;
 		this.path = path;
+		this.termIndex = null;
+	}
+	
+	public IStrategoTerm getTermIndex() {
+		return this.termIndex;
 	}
 
 	public int getNumIndex() {

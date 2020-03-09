@@ -1,8 +1,11 @@
 package org.metaborg.eqclac;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+
+import org.spoofax.interpreter.terms.IStrategoTerm;
 
 public final class NameGraph {
 	
@@ -10,6 +13,13 @@ public final class NameGraph {
 	
 	public NameGraph() {
 		clusters = new HashSet<>();
+	}
+	
+	public NameGraph(List<IStrategoTerm> resolutionRelation) {
+		clusters = new HashSet<>();
+		for(IStrategoTerm pair: resolutionRelation) {
+			addResolutionPair(new ResolutionPair(pair));
+		}
 	}
 	
 	public void addResolutionPair(ResolutionPair pair) {

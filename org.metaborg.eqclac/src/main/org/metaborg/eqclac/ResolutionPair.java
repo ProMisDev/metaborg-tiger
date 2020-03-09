@@ -2,6 +2,8 @@ package org.metaborg.eqclac;
 
 import java.util.Objects;
 
+import org.spoofax.interpreter.terms.IStrategoTerm;
+
 public final class ResolutionPair {
 	
 	private final NameIndex reference;
@@ -13,6 +15,11 @@ public final class ResolutionPair {
 		}
 		this.reference = reference;
 		this.declaration = declaration;
+	}
+	
+	public ResolutionPair(IStrategoTerm pair) {
+		reference = new NameIndex(pair.getSubterm(0));
+		declaration = new NameIndex(pair.getSubterm(1));
 	}
 	
 	public ResolutionPair(String path, int refIndex, int decIndex) {

@@ -5,48 +5,82 @@ imports
 	pp
 	libspoofax/stratego/debug
 	libspoofax/ui/dialogs
-	
+
+	libspoofax/term/annotation
+  	libspoofax/term/origin
+  
   	statix/runtime/-
+  	
+  	signatures/statix/-
+  	
+  	signatures/statix/shared/common/-
+  	signatures/statix/runtime/common/-
+  	
+  	signatures/statix/lang/-
+  	statix/lang/-
+	statix/-
+	
+	signatures/statix/lang/-
+  	statix/lang/statics/-
 
 rules // menu action strategies    
   rename-action-debug :
     (selected-term, _, ast, path, project-path) -> (filename, result)
     where
     	analysis := <stx--get-ast-analysis> ast
-    	; filename := <guarantee-extension(|"refactored.aterm")> path
+    	; check-selection(|selected-term, ast)
+    	; filename := <guarantee-extension(|"refactored.tig")> path
     	; resolution-relation :=  <calc-resolution-relation(|analysis)> ast
     	; <ppdebug(|"resolution-relation: ")> resolution-relation
-    	; rel-length := <length> resolution-relation
-	    ; <ppdebug(|"rel-length")> rel-length
-    	; result := ast
+    	; occs := <get-all-occs> resolution-relation
+    	; <ppdebug(|"occs")> occs
+    	; selected-occ := <find-occurrence(|resolution-relation)> selected-term
+	    ; <ppdebug(|"selected-occ: ")> selected-occ
+	    ; target-indices := <calc-name-cluster> (selected-occ, resolution-relation)
+    	; <ppdebug(|"target-indices: ")> target-indices
+		; new-name := "bar"
+		; renamed-ast := <rename-ast(|target-indices, new-name)> ast
+	    ; <ppdebug(|"target-indices: ")> target-indices
+		//; check-capture(|renamed-ast, resolution-relation, path)
+	    ; result := <pp-Tiger-string> renamed-ast
     	
   calc-resolution-relation(|analysis): ast -> user-defined-relation
   where
   	relation  := <collect(get-dec-ref-pair(|analysis))> ast
   	; user-defined-relation := <filter(is-not-built-in)> relation
-    	
-    	
-    	/*
-       r := <stx--get-ast-property(|a,Ref())> node
-    with
-	    check-selection(|selected-term, ast)
-	    ; target-dec-occ := <get-target-dec-occ(|analysis)> selected-term
-	    ; <ppdebug(|"target-dec-occ: ")> target-dec-occ
-	    ; target-indices := <get-target-indices(|analysis)> target-dec-occ
-	    ; <ppdebug(|"target-indices: ")> target-indices
-			; new-name := <read-new-name> path
-			; old-name-bindings := <get-all-name-bindings(|analysis)> ast
-			; renamed-ast := <rename-ast(|target-indices, new-name)> ast
-	    ; check-capture(|renamed-ast, old-name-bindings, path)
-	    ; filename := <guarantee-extension(|"refactored.aterm")> path
-	    ; result := renamed-ast
-	    */
-	    
+	
+  add-occ: ((ref-index, dec-index), list) -> list2
+	where
+		list1 := <add-elem> (ref-index, list)
+		; list2 := <add-elem> (dec-index, list1)
+  		
+  find-occurrence(|resolution-relation): term -> occ
+  where
+  	occs := <get-all-occs> resolution-relation
+	; occ := <collect-one(get-occurrence(|occs))> term
+  	
+  get-all-occs: resolution-relation -> occs
+	where
+	decs := <map(get-dec)> resolution-relation
+    ; refs  := <map(get-ref)> resolution-relation
+    ; all-occs := <conc> (decs, refs)
+    ; occs := <nub> all-occs
+    
+  get-occurrence(|occs): term -> occurrence
+	where
+		<is-string> term
+		; term-index := <stx--get-ast-index> term
+		; occurrence := <fetch-elem(?term-index)> occs
+    
+  get-dec: (ref, dec) -> dec
+  
+  get-ref: (ref, dec) -> ref 
+   
   get-dec-ref-pair(|analysis): ref -> (ref-index, dec-index)
   where
   	<is-string> ref
   	; dec := <stx--get-ast-property(|analysis, Ref())> ref
-  	; <ppdebug(|"def: ")> dec
+  	; <ppdebug(|"dec : ")> dec
   	; ref-index@TermIndex(ref-path, _) := <stx--get-ast-index> ref
   	; if index := <stx--get-ast-index> dec then
   		dec-index := index
@@ -58,63 +92,8 @@ rules // menu action strategies
   where
   	<not(eq)> (num-index, 0)
   	
-  	
-    
-    
-rules // Step 1: Find target declaration
-  /*
-  get-target-dec-occ(|analysis): selected-term -> target-dec-occ
-	where
-		selected-occ := <find-occurrence(|analysis)> selected-term
-    ; target-dec-occ := <resolve-occ(|analysis)> selected-occ
-    
-  find-occurrence(|analysis): term -> occ
-  where
-  	occs := <get-all-occs(|analysis)> analysis
-  	; occ := <collect-one(get-occurrence(|occs))> term
-  	
-  get-all-occs(|analysis): ast -> occs
-	where
-		decs := <nabl2-get-all-decls(|analysis)> ast
-    ; refs  := <nabl2-get-all-refs(|analysis)> ast
-    ; occs := <conc> (decs, refs)
-    
-	get-occurrence(|occs): term -> occurrence
-	where
-		<is-string> term
-		; term-index := <nabl2-get-ast-index> term
-		; occurrence := <fetch-elem(occ-eq-term-index(|term-index))> occs
-			
-	occ-eq-term-index(|target-term-index): occ@Occurrence(_, _, term-index) -> occ
-	where
-		<?target-term-index> term-index
-    
-  resolve-occ(|analysis): selected-occ -> target-dec-occ
-  where
-  	if (dec-occ, _) := <nabl2-get-resolved-name(|analysis)> selected-occ then
-  		target-dec-occ := dec-occ
-  	else
-  		target-dec-occ := selected-occ
-  	end
-    
-rules // Step 2: Find all terms to rename
-  get-target-indices(|analysis): target-dec-occ -> target-indices
-  where
-    refs  := <nabl2-get-all-refs(|analysis)> analysis
-  	; target-ref-occs := <filter(resolves-to-dec(|analysis, target-dec-occ))> refs
-    ; target-occs := <add-elem> (target-dec-occ, target-ref-occs)
-    ; target-indices := <map(get-term-index-from-occ)> target-occs
-    
-  resolves-to-dec(|analysis, target-dec-occ): ref-occ -> ref-occ
-  where
-  	(dec-occ, _) := <nabl2-get-resolved-name(|analysis)> ref-occ
-  	; <?target-dec-occ> dec-occ
-  	
-  get-term-index-from-occ: Occurrence(_, _, term-index) -> term-index
-  */
 rules //Step 3: Rename terms	 	
 
-	/*
 	rename-ast(|target-indices, new-name): ast -> renamed-ast
 	where
 		renamed-ast := <bottomup(try(rename(|target-indices, new-name)))> ast
@@ -122,36 +101,19 @@ rules //Step 3: Rename terms
   rename(|target-indices, new-name): t -> new-name
 	where
 		<is-string> t
-	 	; term-index := <nabl2-get-ast-index> t
+	 	; term-index := <stx--get-ast-index> t
 	  ; <elem> (term-index, target-indices)
-	*/
 	  
 rules //Step 4: Checking for capture
 	  
-	/*
-  check-capture(|renamed-ast, old-name-bindings, path) =
-		(new-renamed-ast, new-analysis, _, _, _) := <nabl2-analyze-ast(|path)> renamed-ast
-		; new-name-bindings := <get-all-name-bindings(|new-analysis)> new-renamed-ast
-		; old-name-binding-indexes := <get-name-binding-indexes> old-name-bindings
-		; new-name-binding-indexes := <get-name-binding-indexes> new-name-bindings
-		; <show-error-on-fail(eq|"Capture detecte", "This renaming leads to name capture")> (old-name-binding-indexes, new-name-binding-indexes)
-		
-		get-all-name-bindings(|analysis): ast -> name-bindings
-		where
-			refs  := <nabl2-get-all-refs(|analysis)> ast
-			; name-bindings := <map(get-dec-ref-pair(|analysis))> refs
-			
-		get-dec-ref-pair(|analysis): ref -> (ref, dec)
-		where
-			(dec, _) := <nabl2-get-resolved-name(|analysis)> ref
-			
-		get-name-binding-indexes: name-bindings -> sorted-indexes
-		where
-			name-binding-indexes := <map(get-name-binding-index)> name-bindings
-			; sorted-indexes := <qsort(dec-ref-pair-gt)> name-binding-indexes
-		
-		get-name-binding-index: (Occurrence(ref-ns, ref-name, ref-index), Occurrence(dec-ns, dec-name, dec-index)) 
-															-> (ref-index, dec-index)	
+	  /*
+  check-capture(|renamed-ast, resolution-relation, path) =
+		(new-renamed-ast, new-analysis, _, _, _) := <stx--analyze-ast(|path)> renamed-ast
+		; old-resolution-relation := <qsort(dec-ref-pair-gt)> resolution-relation
+		; new-resolution-relation := <calc-resolution-relation(|new-analysis); qsort(dec-ref-pair-gt)> new-analysis
+		; <ppdebug(|"old-resolution-relation: ")> old-resolution-relation
+		; <ppdebug(|"new-resolution-relation: ")> new-resolution-relation
+		; <show-error-on-fail(eq|"Capture detecte", "This renaming leads to name capture")> (old-resolution-relation, new-resolution-relation)
 															
 		dec-ref-pair-gt: ((ref-1, dec-1), (ref-2, dec-2)) -> <id>
 		where
@@ -159,9 +121,8 @@ rules //Step 4: Checking for capture
 															
 		term-index-gt: (TermIndex(path-1, num-index-1), TermIndex(path-2, num-index-2)) -> <id>
 		where 
-			<gt> (num-index-1, num-index-2)
-			*/
-		
+			<gt> (num-index-1, num-index-2) */
+  		
 rules // UI strategies
 
 	compose-filename: path -> filename
@@ -185,5 +146,5 @@ rules // Utility strategies
 	add-elem: (new-elem, list) -> [new-elem | list]
 						  
 rules // external rules
-	external read-config-file(|)
+	external calc-name-cluster(|)
     

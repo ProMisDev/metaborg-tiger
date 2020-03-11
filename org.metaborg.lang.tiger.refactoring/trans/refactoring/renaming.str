@@ -24,7 +24,7 @@ rules // menu action strategies
 			; old-name-bindings := <get-all-name-bindings(|analysis)> ast
 			; renamed-ast := <rename-ast(|target-indices, new-name)> ast
 	    ; check-capture(|renamed-ast, old-name-bindings, path)
-	    ; filename := <compose-filename> path
+	    ; filename := <compose-filename> path 
 	    ; result := <pp-Tiger-string> renamed-ast
     
   rename-action-debug :
@@ -34,22 +34,17 @@ rules // menu action strategies
       ; <not(nabl2-analysis-has-errors)> analysis
     with
 	    check-selection(|selected-term, ast)
+	    ; selected-occ := <find-occurrence(|analysis); get-term-index-from-occ> selected-term
+	    ; <ppdebug(|"selected-occ: ")> selected-occ
 	    ; res-rel := <calc-resolution-relation> analysis
 	    ; <ppdebug(|"res-rel: ")> res-rel
-	    ; rel-length := <length> res-rel
-	    ; <ppdebug(|"rel-length")> rel-length
-	    ; java-ret := <calc-eq-classes> res-rel
-	  //  ; <ppdebug(|"java-ret ")> java-ret
-	    ; target-dec-occ := <get-target-dec-occ(|analysis)> selected-term
-	    ; <ppdebug(|"target-dec-occ: ")> target-dec-occ
-	    ; target-indices := <get-target-indices(|analysis)> target-dec-occ
+	    ; target-indices := <calc-name-cluster> (selected-occ, res-rel)
 	    ; <ppdebug(|"target-indices: ")> target-indices
-			; new-name := "foo"
-			; old-name-bindings := <get-all-name-bindings(|analysis)> ast
+			; new-name := "bar"
 			; renamed-ast := <rename-ast(|target-indices, new-name)> ast
-	    ; check-capture(|renamed-ast, old-name-bindings, path)
-	    ; filename := <guarantee-extension(|"refactored.aterm")> path
-	    ; result := renamed-ast
+	    ; check-capture(|renamed-ast, res-rel, path)
+	    ; filename := <guarantee-extension(|"refactored.tig")> path
+	    ; result := <pp-Tiger-string> renamed-ast
     
     
 rules // Step 1: Find target declaration
@@ -132,12 +127,13 @@ rules //Step 3: Rename terms
 	  
 rules //Step 4: Checking for capture
 	  
-  check-capture(|renamed-ast, old-name-bindings, path) =
+  check-capture(|renamed-ast, resolution-relation, path) =
 		(new-renamed-ast, new-analysis, _, _, _) := <nabl2-analyze-ast(|path)> renamed-ast
-		; new-name-bindings := <get-all-name-bindings(|new-analysis)> new-renamed-ast
-		; old-name-binding-indexes := <get-name-binding-indexes> old-name-bindings
-		; new-name-binding-indexes := <get-name-binding-indexes> new-name-bindings
-		; <show-error-on-fail(eq|"Capture detecte", "This renaming leads to name capture")> (old-name-binding-indexes, new-name-binding-indexes)
+		; old-resolution-relation := <qsort(dec-ref-pair-gt)> resolution-relation
+		; new-resolution-relation := <calc-resolution-relation; qsort(dec-ref-pair-gt)> new-analysis
+		; <ppdebug(|"old-resolution-relation: ")> old-resolution-relation
+		; <ppdebug(|"new-resolution-relation: ")> new-resolution-relation
+		; <show-error-on-fail(eq|"Capture detecte", "This renaming leads to name capture")> (old-resolution-relation, new-resolution-relation)
 		
 		get-all-name-bindings(|analysis): ast -> name-bindings
 		where
@@ -187,5 +183,5 @@ rules // Utility strategies
 	add-elem: (new-elem, list) -> [new-elem | list]
 						  
 rules // external rules
-	external calc-eq-classes(|)
+	external calc-name-cluster(|)
     

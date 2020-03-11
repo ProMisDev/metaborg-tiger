@@ -1,15 +1,15 @@
 /* 
 test file to rename a variable inside a let binding to the same name as the varialbe of the outside let binding
-y -> x
+foo -> bar
 */
 
 let 
-	var x := 10
+	var bar := 10
 	var r := 
 	  let
-		  var y := 100
+		  var foo := 100
 	  in 
-		  x + y
+		  bar + foo
 		end
   in
   	r

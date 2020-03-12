@@ -4,12 +4,12 @@ y -> x
 */
 
 let 
-	var x := 10
+	var bar := 10
 	var r := 
 	  let
-		  var y := 100
+		  var foo := 100
 	  in 
-		  x + y
+		  bar + foo
 		end
   in
   	r

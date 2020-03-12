@@ -6,10 +6,10 @@ import java.util.stream.Collectors;
 
 import org.metaborg.eqclac.NameGraph;
 import org.metaborg.eqclac.NameIndex;
-import org.spoofax.interpreter.core.Tools;
 import org.spoofax.interpreter.terms.IStrategoList;
 import org.spoofax.interpreter.terms.IStrategoTerm;
 import org.spoofax.interpreter.terms.ITermFactory;
+import org.spoofax.terms.util.TermUtils;
 import org.strategoxt.lang.Context;
 import org.strategoxt.lang.Strategy;
 import org.strategoxt.stratego_lib.debug_0_0;
@@ -20,7 +20,7 @@ public class calc_name_cluster_0_0 extends Strategy {
 
 	@Override
 	public IStrategoTerm invoke(Context context, IStrategoTerm current) {		
-		List<IStrategoTerm> resolutionRelation = Tools.asJavaList(current.getSubterm(1));
+		List<IStrategoTerm> resolutionRelation = TermUtils.toJavaList(current.getSubterm(1));
 		NameIndex selectedOccurrence = new NameIndex(current.getSubterm(0));
 		NameGraph nameGraph = new NameGraph(resolutionRelation);
 		

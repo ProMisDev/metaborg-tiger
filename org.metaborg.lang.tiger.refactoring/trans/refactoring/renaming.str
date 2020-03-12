@@ -18,12 +18,12 @@ rules // menu action strategies
       <not(nabl2-analysis-has-errors)> analysis
     with
 	    check-selection(|selected-term, ast)
-	    ; target-dec-occ := <get-target-dec-occ(|analysis)> selected-term 
-	    ; target-indices := <get-target-indices(|analysis)> target-dec-occ
+	    ; selected-occ := <find-occurrence(|analysis)> selected-term
+	    ; resolution-relation := <calc-resolution-relation> analysis
+	    ; target-indices := <calc-name-cluster> (selected-occ, resolution-relation)
 			; new-name := <read-new-name> path
-			; old-name-bindings := <get-all-name-bindings(|analysis)> ast
 			; renamed-ast := <rename-ast(|target-indices, new-name)> ast
-	    ; check-capture(|renamed-ast, old-name-bindings, path)
+	    ; check-capture(|renamed-ast, resolution-relation, path)
 	    ; filename := <compose-filename> path 
 	    ; result := <pp-Tiger-string> renamed-ast
     
@@ -34,29 +34,25 @@ rules // menu action strategies
       ; <not(nabl2-analysis-has-errors)> analysis
     with
 	    check-selection(|selected-term, ast)
-	    ; selected-occ := <find-occurrence(|analysis); get-term-index-from-occ> selected-term
+	    ; selected-occ := <find-occurrence(|analysis)> selected-term
 	    ; <ppdebug(|"selected-occ: ")> selected-occ
-	    ; res-rel := <calc-resolution-relation> analysis
-	    ; <ppdebug(|"res-rel: ")> res-rel
-	    ; target-indices := <calc-name-cluster> (selected-occ, res-rel)
+	    ; resolution-relation := <calc-resolution-relation> analysis
+	    ; <ppdebug(|"resolution-relation: ")> resolution-relation
+	    ; target-indices := <calc-name-cluster> (selected-occ, resolution-relation)
 	    ; <ppdebug(|"target-indices: ")> target-indices
 			; new-name := "bar"
 			; renamed-ast := <rename-ast(|target-indices, new-name)> ast
-	    ; check-capture(|renamed-ast, res-rel, path)
+	    ; check-capture(|renamed-ast, resolution-relation, path)
 	    ; filename := <guarantee-extension(|"refactored.tig")> path
 	    ; result := <pp-Tiger-string> renamed-ast
     
     
-rules // Step 1: Find target declaration
-  get-target-dec-occ(|analysis): selected-term -> target-dec-occ
-	where
-		selected-occ := <find-occurrence(|analysis)> selected-term
-    ; target-dec-occ := <resolve-occ(|analysis)> selected-occ
-    
-  find-occurrence(|analysis): term -> occ
+rules // Step 1: Find occurrence in selection
+  find-occurrence(|analysis): term -> occ-index
   where
   	occs := <get-all-occs(|analysis)> analysis
   	; occ := <collect-one(get-occurrence(|occs))> term
+  	; occ-index := <get-term-index-from-occ> occ
   	
   get-all-occs(|analysis): ast -> occs
 	where
@@ -74,22 +70,7 @@ rules // Step 1: Find target declaration
 	where
 		<?target-term-index> term-index
     
-  resolve-occ(|analysis): selected-occ -> target-dec-occ
-  where
-  	if (dec-occ, _) := <nabl2-get-resolved-name(|analysis)> selected-occ then
-  		target-dec-occ := dec-occ
-  	else
-  		target-dec-occ := selected-occ
-  	end
-    
 rules // Step 2: Find all terms to rename
-  get-target-indices(|analysis): target-dec-occ -> target-indices
-  where
-    refs  := <nabl2-get-all-refs(|analysis)> analysis
-  	; target-ref-occs := <filter(resolves-to-dec(|analysis, target-dec-occ))> refs
-    ; target-occs := <add-elem> (target-dec-occ, target-ref-occs)
-    ; target-indices := <map(get-term-index-from-occ)> target-occs
-    
   calc-resolution-relation: analysis -> user-defined-relation
   where
   	refs  := <nabl2-get-all-refs(|analysis)> analysis
@@ -105,11 +86,6 @@ rules // Step 2: Find all terms to rename
   	(dec, _) := <nabl2-get-resolved-name(|analysis)> ref
   	; ref-index := <get-term-index-from-occ> ref
   	; dec-index := <get-term-index-from-occ> dec
-  	    
-  resolves-to-dec(|analysis, target-dec-occ): ref-occ -> ref-occ
-  where
-  	(dec-occ, _) := <nabl2-get-resolved-name(|analysis)> ref-occ
-  	; <?target-dec-occ> dec-occ
   	
   get-term-index-from-occ: Occurrence(_, name, term-index) -> term-index
   	
@@ -134,23 +110,6 @@ rules //Step 4: Checking for capture
 		; <ppdebug(|"old-resolution-relation: ")> old-resolution-relation
 		; <ppdebug(|"new-resolution-relation: ")> new-resolution-relation
 		; <show-error-on-fail(eq|"Capture detecte", "This renaming leads to name capture")> (old-resolution-relation, new-resolution-relation)
-		
-		get-all-name-bindings(|analysis): ast -> name-bindings
-		where
-			refs  := <nabl2-get-all-refs(|analysis)> ast
-			; name-bindings := <map(get-dec-ref-pair(|analysis))> refs
-			
-		get-dec-ref-pair(|analysis): ref -> (ref, dec)
-		where
-			(dec, _) := <nabl2-get-resolved-name(|analysis)> ref
-			
-		get-name-binding-indexes: name-bindings -> sorted-indexes
-		where
-			name-binding-indexes := <map(get-name-binding-index)> name-bindings
-			; sorted-indexes := <qsort(dec-ref-pair-gt)> name-binding-indexes
-		
-		get-name-binding-index: (Occurrence(ref-ns, ref-name, ref-index), Occurrence(dec-ns, dec-name, dec-index)) 
-															-> (ref-index, dec-index)	
 															
 		dec-ref-pair-gt: ((ref-1, dec-1), (ref-2, dec-2)) -> <id>
 		where

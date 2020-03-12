@@ -71,20 +71,21 @@ rules
     	analysis := <nabl2-get-ast-analysis> ast;
       <not(nabl2-analysis-has-errors)> analysis
     with
-    target-dec-occ := <get-target-dec-occ-test(|analysis, old-name)> ast 
-    ; target-indices := <get-target-indices(|analysis)> target-dec-occ
-		; old-name-bindings := <get-all-name-bindings(|analysis)> ast
+    selected-occ := <get-target-dec-occ-test(|analysis, old-name)> ast 
+    ; resolution-relation := <calc-resolution-relation> analysis
+	  ; target-indices := <calc-name-cluster> (selected-occ, resolution-relation)
 		; renamed-ast := <rename-ast(|target-indices, new-name)> ast
 		; if capture-expected
-		then not(check-capture(|renamed-ast, old-name-bindings, path))
-		else check-capture(|renamed-ast, old-name-bindings, path) end
+		then not(check-capture(|renamed-ast, resolution-relation, path))
+		else check-capture(|renamed-ast, resolution-relation, path) end
     ; result := renamed-ast
     	  
-  get-target-dec-occ-test(|analysis, old-name): ast -> target-dec-occ
+  get-target-dec-occ-test(|analysis, old-name): ast -> occ-index
 	where
 		occs := <get-all-occs(|analysis)> analysis
 		; selected-occ := <collect-one(get-occurrence-test(|occs, old-name))> ast
     ; target-dec-occ := <resolve-occ(|analysis)> selected-occ
+    ; occ-index := <get-term-index-from-occ> target-dec-occ
     
   get-occurrence-test(|occs, old-name): t -> occurrence
 	where
@@ -96,4 +97,12 @@ rules
 	eq-no-annos: (term1, term2) -> (term1, term2) 
 	where
 	  <eq> (<strip-annos> term1, <strip-annos> term2) 
+	  
+  resolve-occ(|analysis): selected-occ -> target-dec-occ
+  where
+  	if (dec-occ, _) := <nabl2-get-resolved-name(|analysis)> selected-occ then
+  		target-dec-occ := dec-occ
+  	else
+  		target-dec-occ := selected-occ
+  	end
     

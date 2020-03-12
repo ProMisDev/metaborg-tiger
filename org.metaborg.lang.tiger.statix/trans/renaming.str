@@ -31,11 +31,8 @@ rules // menu action strategies
 	    ; <ppdebug(|"target-indices: ")> target-indices
 		; check-capture(|renamed-ast, resolution-relation, path)
 	    ; result := <pp-Tiger-string> renamed-ast
-    	
-  calc-resolution-relation(|analysis): ast -> user-defined-relation
-  where
-  	relation  := <collect(get-dec-ref-pair(|analysis))> ast
-  	; user-defined-relation := <filter(is-not-built-in)> relation
+    
+rules // Step 1: Find occurrence in selection
 	
   find-occurrence(|resolution-relation): term -> occ
   where
@@ -58,7 +55,14 @@ rules // menu action strategies
   get-dec: (ref, dec) -> dec
   
   get-ref: (ref, dec) -> ref 
-   
+
+rules // Step 2: Find all terms to rename
+
+  calc-resolution-relation(|analysis): ast -> user-defined-relation
+  where
+  	relation  := <collect(get-dec-ref-pair(|analysis))> ast
+  	; user-defined-relation := <filter(is-not-built-in)> relation
+  	
   get-dec-ref-pair(|analysis): ref -> (ref-index, dec-index)
   where
   	<is-string> ref
@@ -74,7 +78,7 @@ rules // menu action strategies
   is-not-built-in: (ref, dec@TermIndex(path, num-index)) -> <id>
   where
   	<not(eq)> (num-index, 0)
-  	
+
 rules //Step 3: Rename terms	 	
 
   rename-ast(|target-indices, new-name): ast -> renamed-ast

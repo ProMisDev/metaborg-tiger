@@ -6,3 +6,8 @@ store.core.ds
 .factorypath
 *.refactored.tig
 *.dot
+
+# Gradle
+**/.gradle
+**/build/
+!.gradlew/wrapper/gradle-wrapper.jar

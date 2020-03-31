@@ -59,7 +59,6 @@ rules // Step 1: Find occurrence in selection
 		decs := <nabl2-get-all-decls(|analysis)> ast
     ; refs  := <nabl2-get-all-refs(|analysis)> ast
     ; occs := <conc> (decs, refs)
-    // add nup
     
 	get-occurrence(|occs): term -> occurrence
 	where

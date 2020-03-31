@@ -5,12 +5,10 @@ foo -> bar
 
 let 
 	var bar := 10
-	var r := 
+	in
 	  let
 		  var foo := 100
 	  in 
 		  bar + foo
 		end
-  in
-  	r
 end

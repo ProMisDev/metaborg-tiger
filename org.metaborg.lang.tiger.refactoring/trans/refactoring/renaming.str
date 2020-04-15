@@ -17,13 +17,8 @@ rules // menu action strategies
     	analysis := <nabl2-get-ast-analysis> ast;
       <not(nabl2-analysis-has-errors)> analysis
     with
-	    check-selection(|selected-term, ast)
-	    ; selected-occ := <find-occurrence(|analysis)> selected-term
-	    ; resolution-relation := <calc-resolution-relation> analysis
-	    ; target-indices := <calc-name-cluster> (selected-occ, resolution-relation)
-			; new-name := <read-new-name> path
-			; renamed-ast := <rename-ast(|target-indices, new-name)> ast
-	    ; check-capture(|renamed-ast, resolution-relation, path)
+    	new-name := <read-new-name> path
+	    ; renamed-ast := <rename(|selected-term, new-name, path)> ast
 	    ; filename := <compose-filename> path 
 	    ; result := <pp-Tiger-string> renamed-ast
     
@@ -45,6 +40,16 @@ rules // menu action strategies
 	    ; check-capture(|renamed-ast, resolution-relation, path)
 	    ; filename := <guarantee-extension(|"refactored.tig")> path
 	    ; result := <pp-Tiger-string> renamed-ast
+    
+    rename(|selected-term, new-name, path): ast -> renamed-ast
+    where
+    	check-selection(|selected-term, ast)
+    	; analysis := <nabl2-get-ast-analysis> ast
+	    ; selected-occ := <find-occurrence(|analysis)> selected-term
+	    ; resolution-relation := <calc-resolution-relation> analysis
+	    ; target-indices := <calc-name-cluster> (selected-occ, resolution-relation)
+			; renamed-ast := <rename-ast(|target-indices, new-name)> ast
+	    ; check-capture(|renamed-ast, resolution-relation, path)
     
     
 rules // Step 1: Find occurrence in selection
@@ -94,9 +99,9 @@ rules //Step 3: Rename terms
 
 	rename-ast(|target-indices, new-name): ast -> renamed-ast
 	where
-		renamed-ast := <bottomup(try(rename(|target-indices, new-name)))> ast
+		renamed-ast := <bottomup(try(rename-term(|target-indices, new-name)))> ast
 
-  rename(|target-indices, new-name): t -> new-name
+  rename-term(|target-indices, new-name): t -> new-name
 	where
 		<is-string> t
 	 	; term-index := <nabl2-get-ast-index> t

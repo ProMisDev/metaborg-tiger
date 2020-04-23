@@ -15,6 +15,7 @@ rules // menu action strategies
   rename-action-debug :
     (selected-term, _, ast, path, project-path) -> (filename, result)
     where
+   		 <debug(!"ast 1 = ")> ast;
     	analysis := <stx--get-ast-analysis> ast
     	; check-selection(|selected-term, ast)
     	; filename := <guarantee-extension(|"refactored.tig")> path
@@ -66,7 +67,8 @@ rules // Step 2: Find all terms to rename
   get-dec-ref-pair(|analysis): ref -> (ref-index, dec-index)
   where
   	<is-string> ref
-  	; dec := <stx--get-ast-property(|analysis, Ref())> ref
+  	//; dec := <stx--get-ast-property(|analysis, Ref())> ref
+  	; dec := <debug(!"before ");stx--get-ast-property(|analysis, Ref());debug(!"after ")> ref
   	; <ppdebug(|"dec : ")> dec
   	; ref-index@TermIndex(ref-path, _) := <stx--get-ast-index> ref
   	; if index := <stx--get-ast-index> dec then
@@ -85,11 +87,12 @@ rules //Step 3: Rename terms
   where
 	renamed-ast := <bottomup(try(rename(|target-indices, new-name)))> ast
 
-  rename(|target-indices, new-name): t -> new-name
+  rename(|target-indices, new-name): term -> new-term
 	where
-		<is-string> t
-	 	; term-index := <stx--get-ast-index> t
-	  ; <elem> (term-index, target-indices)
+		<is-string> term
+	 	; term-index := <stx--get-ast-index> term
+	    ; <elem> (term-index, target-indices)
+	    ; new-term := <stx--set-ast-index(|term-index)> new-name
 	  
 rules //Step 4: Checking for capture
 	 
@@ -116,11 +119,13 @@ rules //Step 4: Checking for capture
        ; level := <stx--log-level>
        ; c-name := <stx--mk-qualified-name(|spec-name)> init-constraint
     with
-      ast' := <pre;stx--index-ast(|resource)> ast
+      ast' := <pre> ast
+      ; <debug(!"ast 2 = ")> ast'
       ; C := C(c-name, [<stx--explode> ast'], NoMessage())
       ; Solution(_, a) := <stx--solve-constraint(|spec, level)> C
       ; (error*, warning*, note*) := <stx--delays-as-errors;stx--extract-messages> a
       ; ast'' := <post> ast'
+      ; <debug(!"ast 3 = ")> ast''
       ; result := (ast'', a, error*, warning*, note*)
     
 rules // UI strategies

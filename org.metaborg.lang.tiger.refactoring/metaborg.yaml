@@ -15,8 +15,6 @@ pardonedLanguages:
 - Stratego-Sugar
 - SDF
 - ds
-debug:
-  typesmart: false
 language:
   sdf:
     pretty-print: TigerRefactoring

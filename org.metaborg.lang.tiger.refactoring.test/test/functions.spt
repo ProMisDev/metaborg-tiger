@@ -3,15 +3,33 @@ module renaming-functions
 language TigerRefactoring
 
 
-test rename function [[
+test rename function from declaration [[
 let 
-	function plus(a : int, b:int) : int = (
+	function [[plus]](a : int, b:int) : int = (
 		a + b
 	)
 in
    	plus(1,1)
 end
-]] run rename-test-function to [[
+]] run rename(|#1, "add", "test/functions.spt") to [[
+let 
+	function add(a : int, b:int) : int = (
+		a + b
+	)
+in
+   	add(1,1)
+end
+]]
+
+test rename function from reference [[
+let 
+	function plus(a : int, b:int) : int = (
+		a + b
+	)
+in
+   	[[plus]](1,1)
+end
+]] run rename(|#1, "add", "test/functions.spt") to [[
 let 
 	function add(a : int, b:int) : int = (
 		a + b
@@ -23,14 +41,14 @@ end
 
 test rename procedure [[
 let 
-	function printnl(x : string) = (
+	function [[printnl]](x : string) = (
 		print(x); 
 		print("\n")
 	)
 in
    	printnl("Hello World")
 end
-]] run rename-test-procedure to [[
+]] run rename(|#1, "printNewLine", "test/functions.spt") to [[
 let 
 	function printNewLine(x : string) = (
 		print(x); 
@@ -43,14 +61,14 @@ end
 
 test rename argument [[
 let 
-	function printnl(x : string) = (
+	function printnl([[x]] : string) = (
 		print(x); 
 		print("\n")
 	)
 in
    	printnl("Hello World")
 end
-]] run rename-test-farg to [[
+]] run rename(|#1, "text", "test/functions.spt") to [[
 let 
 	function printnl(text : string) = (
 		print(text); 

@@ -1,0 +1,57 @@
+module spt-dev
+
+language TigerRefactoring
+
+
+// TODO Delete once SPT extension is merged
+test rename [[
+let 
+	function [[plus]](a : int, b:int) : int = (
+		a + b
+	)
+in
+   	plus(1,1)
+end
+]] run rename(|#1, "add", "test/spt-dev.spt") to [[
+let 
+	function add(a : int, b:int) : int = (
+		a + b
+	)
+in
+   	add(1,1)
+end
+]]
+
+test debog noargs [[
+let
+	var msg := "Hello World"
+in 
+	print(msg)
+end
+]] run debog-test-noargs to [[
+let
+	var msg := "Hello World"
+in 
+	print(msg)
+end
+]]
+
+
+test debog multiargs [[
+let
+	var [[msg]] := "Hello World"
+in 
+	print([[msg]])
+end
+]] run debog-test-multiargs(|1, "blub", 2) to [[
+let
+	var msg := "Hello World"
+in 
+	print(msg)
+end
+]]
+
+
+
+
+

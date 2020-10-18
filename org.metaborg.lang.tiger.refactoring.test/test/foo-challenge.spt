@@ -1,0 +1,35 @@
+module foo-challenge
+
+language TigerRefactoring
+
+test Foo Challenge [[
+let
+  type foo = {
+		foo : string
+  }
+  function foo (foo: [[foo]]) = (
+  	let
+  		var foo := foo.foo
+  	in
+  		print(foo)
+  	end
+  )
+in
+  	foo(foo{foo = "foo"})
+end
+]] run rename(|#1, "bar", "test/foo-challenge.spt") to [[
+let
+  type bar = {
+		foo : string
+  }
+  function foo (foo: bar) = (
+  	let
+  		var foo := foo.foo
+  	in
+  		print(foo)
+  	end
+  )
+in
+  	foo(bar{foo = "foo"})
+end
+]]

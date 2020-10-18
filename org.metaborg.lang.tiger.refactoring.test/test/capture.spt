@@ -4,24 +4,23 @@ language TigerRefactoring
 
 test rename variable with capture [[
 let 
-	var x := 10
-	var r := 
-	  let
-		  var y := 100
-	  in 
-		  x + y
-		end
-  in
-  	r
+  var [[bar]] := 10
+in
+  let
+    var foo := 100
+  in 
+    bar + foo
+  end
 end
-]] run rename-test-var-capture
+]] run rename(|#1, "foo", "test/capture.spt") fails
+
 
 test rename argument with capture [[
 let 
 	function plus(a : int, b:int) : int = (
 		a + b;
 	  let
-			function plus(d:int) : int = 
+			function plus([[d]]:int) : int = 
 				a + d
 		in 
 		 plus(1)
@@ -30,4 +29,4 @@ let
 in
    	plus(1,1)
 end
-]] run rename-test-farg-capture
+]] run rename(|#1, "a", "test/capture.spt") fails

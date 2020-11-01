@@ -7,9 +7,9 @@ test rename variable without type [[
 let
 	var msg := "Hello World"
 in 
-	print(msg)
+	print([[msg]])
 end
-]] run rename-test-var to [[
+]] run rename(|#1, "message", "test/variables.spt") to [[
 let
 	var message := "Hello World"
 in 
@@ -21,10 +21,10 @@ test rename variable with type [[
 let
 	var msg : string := "Hello World"
 in 
-	print(msg)
+	print([[msg]])
 end
 
-]] run rename-test-var to [[
+]] run rename(|#1, "message", "test/variables.spt") to [[
 let
 	var message : string := "Hello World"
 in 

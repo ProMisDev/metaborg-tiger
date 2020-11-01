@@ -35,36 +35,35 @@ rules // menu action strategies
 	    ; <ppdebug(|"resolution-relation: ")> resolution-relation
 	    ; target-indices := <calc-name-cluster> (selected-occ, resolution-relation)
 	    ; <ppdebug(|"target-indices: ")> target-indices
-			; new-name := "bar"
-			; renamed-ast := <rename-ast(|target-indices, new-name)> ast
+		; new-name := "bar"
+		; renamed-ast := <rename-ast(|target-indices, new-name)> ast
 	    ; check-capture(|renamed-ast, resolution-relation, path)
 	    ; filename := <guarantee-extension(|"refactored.tig")> path
 	    ; result := <pp-Tiger-string> renamed-ast
     
     rename(|selected-term, new-name, path): ast -> renamed-ast
     where
-    	check-selection(|selected-term, ast)
-    	; analysis := <nabl2-get-ast-analysis> ast
+    	analysis := <nabl2-get-ast-analysis> ast
+    	; check-selection(|selected-term, ast)
 	    ; selected-occ := <find-occurrence(|analysis)> selected-term
 	    ; resolution-relation := <calc-resolution-relation> analysis
 	    ; target-indices := <calc-name-cluster> (selected-occ, resolution-relation)
-			; renamed-ast := <rename-ast(|target-indices, new-name)> ast
+		; renamed-ast := <rename-ast(|target-indices, new-name)> ast
 	    ; check-capture(|renamed-ast, resolution-relation, path)
     
     
 rules // Step 1: Find occurrence in selection
   find-occurrence(|analysis): term -> occ-index
   where
-  	occs := <get-all-occs(|analysis)> analysis
-  	; occ := <collect-one(get-occurrence(|occs))> term
-  	; occ-index := <get-term-index-from-occ> occ
-  	
-  get-all-occs(|analysis): ast -> occs
-	where
-		decs := <nabl2-get-all-decls(|analysis)> ast
-    ; refs  := <nabl2-get-all-refs(|analysis)> ast
+  	decs := <nabl2-get-all-decls(|analysis)> analysis
+    ; refs  := <nabl2-get-all-refs(|analysis)> analysis
     ; occs := <conc> (decs, refs)
-    // add nup
+  	; occ := <collect-one(get-occurrence(|occs))> term
+  	; if (<elem> (occ, refs)) then
+  		(dec, _) := <nabl2-get-resolved-name(|analysis)> occ
+  		; <show-error-on-fail(not(is-built-in)|"Renaming impossible", "The selected entity was not declarded within this program.")> dec	
+  	end
+  	; occ-index := <get-term-index-from-occ> occ
     
 	get-occurrence(|occs): term -> occurrence
 	where
@@ -82,6 +81,10 @@ rules // Step 2: Find all terms to rename
   	refs  := <nabl2-get-all-refs(|analysis)> analysis
   	; relation := <map(get-dec-ref-index(|analysis))> refs
   	; user-defined-relation := <filter(is-not-built-in)> relation
+  	
+  is-built-in: Occurrence(_, _, TermIndex(path, num-index)) -> <id>
+  where
+  	<eq> (num-index, 0)
   	
   is-not-built-in: (ref, dec@TermIndex(path, num-index)) -> <id>
   where
@@ -136,7 +139,7 @@ rules // UI strategies
 	
 	read-new-name: _ -> new-name
 	where 	
-   new-name := <show-input-dialog(|"Rename", "")> "Enter a new name"
+   		new-name := <show-input-dialog(|"Rename", "")> "Enter a new name"
    
   check-selection(|selected-term, ast) =
     <show-error-on-fail(not(eq)|"Invalid selection", "Please select a name")> (selected-term, ast)

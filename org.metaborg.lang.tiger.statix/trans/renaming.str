@@ -111,7 +111,7 @@ rules //Step 3: Rename terms
 rules //Step 4: Checking for capture
 	 
   check-capture(|renamed-ast, resolution-relation, path) =
-		(new-renamed-ast, new-analysis, _, _, _) := <stx-analyze-ast(pre-analyze, post-analyze|"static-semantics", "programOK")> (path, renamed-ast)
+		(new-renamed-ast, new-analysis, _, _, _) := <stx-analyze-ast(pre-analyze, post-analyze|"static-semantics", "programOk")> (path, renamed-ast)
 		; <ppdebug(|"new-renamed-ast ")> new-renamed-ast
 		; old-resolution-relation := <qsort(dec-ref-pair-gt)> resolution-relation
 		; new-resolution-relation := <calc-resolution-relation(|new-analysis); qsort(dec-ref-pair-gt)> new-renamed-ast

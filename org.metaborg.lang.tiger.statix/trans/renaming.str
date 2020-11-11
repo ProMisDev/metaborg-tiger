@@ -2,9 +2,11 @@ module renaming
 
 imports 
 	signatures/-
+	analysis
 	pp
 	libspoofax/stratego/debug
 	libspoofax/ui/dialogs
+	libspoofax/sdf/pp
 
 	libspoofax/term/annotation
   	libspoofax/term/origin
@@ -16,6 +18,10 @@ rules // menu action strategies
     (selected-term, _, ast, path, project-path) -> (filename, result)
     where
    		 <debug(!"ast 1 = ")> ast;
+   		 origin-ast := <topdown(get-origin)> ast;
+   		 //origin-ast := <origin-term> ast;
+   		 <debug(!"ast origin = ")> origin-ast;
+   		 <pre-analyze> origin-ast;
     	analysis := <stx--get-ast-analysis> ast
     	; check-selection(|selected-term, ast)
     	; filename := <guarantee-extension(|"refactored.tig")> path
@@ -32,6 +38,16 @@ rules // menu action strategies
 	    ; <ppdebug(|"target-indices: ")> target-indices
 		; check-capture(|renamed-ast, resolution-relation, path)
 	    ; result := <pp-Tiger-string> renamed-ast
+	    
+	get-origin: t -> ot
+	where
+		<debug(!"term = ")> t;
+		if <not(is-list);has-origin-term> t then
+			ot := <origin-term> t;
+			<ia-get-sort> ot
+		else
+			ot := t
+		end	    
     
 rules // Step 1: Find occurrence in selection
 	
@@ -67,9 +83,7 @@ rules // Step 2: Find all terms to rename
   get-dec-ref-pair(|analysis): ref -> (ref-index, dec-index)
   where
   	<is-string> ref
-  	//; dec := <stx--get-ast-property(|analysis, Ref())> ref
-  	; dec := <debug(!"before ");stx--get-ast-property(|analysis, Ref());debug(!"after ")> ref
-  	; <ppdebug(|"dec : ")> dec
+  	; dec := <stx--get-ast-property(|analysis, Ref())> ref
   	; ref-index@TermIndex(ref-path, _) := <stx--get-ast-index> ref
   	; if index := <stx--get-ast-index> dec then
   		dec-index := index
@@ -97,7 +111,7 @@ rules //Step 3: Rename terms
 rules //Step 4: Checking for capture
 	 
   check-capture(|renamed-ast, resolution-relation, path) =
-		(new-renamed-ast, new-analysis, _, _, _) := <stx-analyze-ast(id, id|"static-semantics", "programOK")> (path, renamed-ast)
+		(new-renamed-ast, new-analysis, _, _, _) := <stx-analyze-ast(pre-analyze, post-analyze|"static-semantics", "programOK")> (path, renamed-ast)
 		; <ppdebug(|"new-renamed-ast ")> new-renamed-ast
 		; old-resolution-relation := <qsort(dec-ref-pair-gt)> resolution-relation
 		; new-resolution-relation := <calc-resolution-relation(|new-analysis); qsort(dec-ref-pair-gt)> new-renamed-ast
@@ -119,13 +133,11 @@ rules //Step 4: Checking for capture
        ; level := <stx--log-level>
        ; c-name := <stx--mk-qualified-name(|spec-name)> init-constraint
     with
-      ast' := <pre> ast
-      ; <debug(!"ast 2 = ")> ast'
+      ast' := <pre;stx--index-ast(|resource)> ast
       ; C := C(c-name, [<stx--explode> ast'], NoMessage())
       ; Solution(_, a) := <stx--solve-constraint(|spec, level)> C
       ; (error*, warning*, note*) := <stx--delays-as-errors;stx--extract-messages> a
       ; ast'' := <post> ast'
-      ; <debug(!"ast 3 = ")> ast''
       ; result := (ast'', a, error*, warning*, note*)
     
 rules // UI strategies

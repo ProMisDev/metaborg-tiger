@@ -69,7 +69,8 @@ rules // Step 1: Find occurrence in selection
 	where
 		<is-string> term
 		; term-index := <nabl2-get-ast-index> term
-		; occurrence := <fetch-elem(occ-eq-term-index(|term-index))> occs
+		; <show-error-on-fail(fetch-elem(occ-eq-term-index(|term-index))|"Renaming impossible", "The selected term cannot be renamed.")> occs
+		; occurrence := <fetch-elem(occ-eq-term-index(|term-index))> occs	
 			
 	occ-eq-term-index(|target-term-index): occ@Occurrence(_, _, term-index) -> occ
 	where

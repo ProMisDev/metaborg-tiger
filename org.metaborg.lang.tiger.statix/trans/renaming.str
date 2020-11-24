@@ -14,14 +14,19 @@ imports
   	statix/runtime/-
   	
 rules // menu action strategies    
+  rename-action:
+    (selected-term, _, ast, path, project-path) -> (filename, result)
+    where
+    	analysis := <stx--get-ast-analysis> ast
+    	; new-name := <read-new-name> path
+    	; renamed-ast := <rename(|selected-term, new-name, path)> ast
+    	; filename := <compose-filename> path 
+	    ; result := <pp-Tiger-string> renamed-ast
+	    
   rename-action-debug :
     (selected-term, _, ast, path, project-path) -> (filename, result)
     where
    		 <debug(!"ast 1 = ")> ast;
-   		 origin-ast := <topdown(get-origin)> ast;
-   		 //origin-ast := <origin-term> ast;
-   		 <debug(!"ast origin = ")> origin-ast;
-   		 <pre-analyze> origin-ast;
     	analysis := <stx--get-ast-analysis> ast
     	; check-selection(|selected-term, ast)
     	; filename := <guarantee-extension(|"refactored.tig")> path
@@ -39,15 +44,16 @@ rules // menu action strategies
 		; check-capture(|renamed-ast, resolution-relation, path)
 	    ; result := <pp-Tiger-string> renamed-ast
 	    
-	get-origin: t -> ot
-	where
-		<debug(!"term = ")> t;
-		if <not(is-list);has-origin-term> t then
-			ot := <origin-term> t;
-			<ia-get-sort> ot
-		else
-			ot := t
-		end	    
+    rename(|selected-term, new-name, path): ast -> renamed-ast
+    where
+    	analysis := <stx--get-ast-analysis> ast
+    	; check-selection(|selected-term, ast)
+    	; resolution-relation :=  <calc-resolution-relation(|analysis)> ast
+    	; selected-occ := <find-occurrence(|resolution-relation)> selected-term
+	    ; target-indices := <calc-name-cluster> (selected-occ, resolution-relation)
+		; renamed-ast := <rename-ast(|target-indices, new-name)> ast
+		; check-capture(|renamed-ast, resolution-relation, path)
+	    
     
 rules // Step 1: Find occurrence in selection
 	
@@ -99,9 +105,9 @@ rules //Step 3: Rename terms
 
   rename-ast(|target-indices, new-name): ast -> renamed-ast
   where
-	renamed-ast := <bottomup(try(rename(|target-indices, new-name)))> ast
+	renamed-ast := <bottomup(try(rename-term(|target-indices, new-name)))> ast
 
-  rename(|target-indices, new-name): term -> new-term
+  rename-term(|target-indices, new-name): term -> new-term
 	where
 		<is-string> term
 	 	; term-index := <stx--get-ast-index> term
@@ -133,7 +139,9 @@ rules //Step 4: Checking for capture
        ; level := <stx--log-level>
        ; c-name := <stx--mk-qualified-name(|spec-name)> init-constraint
     with
+      // <ppdebug(|"ast-pre:")> ast;
       ast' := <pre;stx--index-ast(|resource)> ast
+       ; <ppdebug(|"ast-post:")> ast'
       ; C := C(c-name, [<stx--explode> ast'], NoMessage())
       ; Solution(_, a) := <stx--solve-constraint(|spec, level)> C
       ; (error*, warning*, note*) := <stx--delays-as-errors;stx--extract-messages> a
@@ -151,7 +159,7 @@ rules // UI strategies
 	
 	read-new-name: _ -> new-name
 	where 	
-   new-name := <show-input-dialog(|"Rename", "")> "Enter a new name"
+   		new-name := <show-input-dialog(|"Rename", "")> "Enter a new name"
    
   check-selection(|selected-term, ast) =
     <show-error-on-fail(not(eq)|"Invalid selection", "Please select a name")> (selected-term, ast)

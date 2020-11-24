@@ -47,8 +47,10 @@ public final class NameGraph {
 	}
 	
 	public void union(Set<NameIndex> decCluster, Set<NameIndex> refCluster) {
-		decCluster.addAll(refCluster);
-		clusters.remove(refCluster);
+		if (decCluster != refCluster) {
+			decCluster.addAll(refCluster);
+			clusters.remove(refCluster);
+		}
 	}
 
 }

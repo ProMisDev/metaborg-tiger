@@ -192,6 +192,27 @@ class NameGraphTest {
 		assertTrue(cluster.contains(pair2.getReference()));
 
 	}
+	
+	@Test
+	void testSelfReferencePairs() {
+		ResolutionPair pair1 = new ResolutionPair("demo/example.mjv", 30, 40);
+		ResolutionPair pair2 = new ResolutionPair("demo/example.mjv", 23, 23);
+		ResolutionPair pair3 = new ResolutionPair("demo/example.mjv", 31, 12);
+		ResolutionPair pair4 = new ResolutionPair("demo/example.mjv", 12, 12);
+		
+		NameGraph graph = new NameGraph();
+		graph.addResolutionPair(pair1);
+		graph.addResolutionPair(pair2);
+		graph.addResolutionPair(pair3);
+		graph.addResolutionPair(pair4);
+
+		Set<NameIndex> cluster = graph.find(pair3.getReference()).get();
+		assertTrue(cluster.contains(pair3.getReference()));
+		assertTrue(cluster.contains(pair3.getDeclaration()));
+		assertTrue(cluster.contains(pair4.getReference()));
+		assertTrue(cluster.contains(pair4.getReference()));
+
+	}
 
 
 }

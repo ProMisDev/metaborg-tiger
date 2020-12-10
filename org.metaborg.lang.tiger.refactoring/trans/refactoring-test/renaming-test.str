@@ -5,7 +5,6 @@ imports
 	nabl2/api
 	pp
 	libspoofax/stratego/debug
-	refactoring/renaming
 	
 rules //spt-dev
 

@@ -8,7 +8,6 @@ imports
   analysis
   desugar
   renaming
-  refactoring-test/renaming-test
 
   nabl2/runtime/analysis/debug
   nabl2/runtime/prelude/-

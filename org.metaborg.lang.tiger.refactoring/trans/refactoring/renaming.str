@@ -8,18 +8,18 @@ imports
 	libspoofax/ui/dialogs
 	
 	signatures/nabl2/shared/common/-
-  signatures/nabl2/runtime/common/-
+  	signatures/nabl2/runtime/common/-
 
 rules // menu action strategies
-  rename-action :
+  rename-action-2 :
     (selected-term, _, ast, path, project-path) -> (filename, result)
     where
     	analysis := <nabl2-get-ast-analysis> ast;
       <not(nabl2-analysis-has-errors)> analysis
     with
     	new-name := <read-new-name> path
-	    ; renamed-ast := <rename(|selected-term, new-name, path)> ast
-	    ; filename := <compose-filename> path 
+	    ; {| ErrorMessage: renamed-ast := <rename(|selected-term, new-name, path) <+ show-errors; !ast> ast |}
+	    ; filename := <compose-filename> path
 	    ; result := <pp-Tiger-string> renamed-ast
     
   rename-action-debug :
@@ -43,14 +43,14 @@ rules // menu action strategies
     
     rename(|selected-term, new-name, path): ast -> renamed-ast
     where
+    	 
     	analysis := <nabl2-get-ast-analysis> ast
     	; check-selection(|selected-term, ast)
 	    ; selected-occ := <find-occurrence(|analysis)> selected-term
 	    ; resolution-relation := <calc-resolution-relation> analysis
 	    ; target-indices := <calc-name-cluster> (selected-occ, resolution-relation)
 		; renamed-ast := <rename-ast(|target-indices, new-name)> ast
-	    ; check-capture(|renamed-ast, resolution-relation, path)
-    
+	    ; check-capture(|renamed-ast, resolution-relation, path)   
     
 rules // Step 1: Find occurrence in selection
   find-occurrence(|analysis): term -> occ-index
@@ -58,11 +58,11 @@ rules // Step 1: Find occurrence in selection
   	decs := <nabl2-get-all-decls(|analysis)> analysis
     ; refs  := <nabl2-get-all-refs(|analysis)> analysis
     ; occs := <conc> (decs, refs)
-    ; <show-error-on-fail(collect-one(get-occurrence(|occs))|"Renaming impossible", "The selected term cannot be renamed.")> term
+    ; <add-error-on-fail(collect-one(get-occurrence(|occs))|"Renaming impossible", "The selected term cannot be renamed.")> term
   	; occ := <collect-one(get-occurrence(|occs))> term
   	; if (<elem> (occ, refs)) then
   		(dec, _) := <nabl2-get-resolved-name(|analysis)> occ
-  		; <show-error-on-fail(not(is-built-in)|"Renaming impossible", "The selected entity was not declarded within this program.")> dec	
+  		; <add-error-on-fail(not(is-built-in)|"Renaming impossible", "The selected entity was not declarded within this program.")> dec	
   	end
   	; occ-index := <get-term-index-from-occ> occ
     
@@ -130,7 +130,7 @@ rules //Step 4: Checking for capture
 		; new-resolution-relation := <calc-resolution-relation; qsort(dec-ref-pair-gt)> new-analysis
 		; <ppdebug(|"old-resolution-relation: ")> old-resolution-relation
 		; <ppdebug(|"new-resolution-relation: ")> new-resolution-relation
-		; <show-error-on-fail(eq|"Capture detecte", "This renaming leads to name capture")> (old-resolution-relation, new-resolution-relation)
+		; <add-error-on-fail(eq|"Capture detecte", "This renaming leads to name capture")> (old-resolution-relation, new-resolution-relation)
 															
 		dec-ref-pair-gt: ((ref-1, dec-1), (ref-2, dec-2)) -> <id>
 		where
@@ -154,14 +154,26 @@ rules // UI strategies
    		new-name := <show-input-dialog(|"Rename", "")> "Enter a new name"
    
   check-selection(|selected-term, ast) =
-    <show-error-on-fail(not(eq)|"Invalid selection", "Please select a name")> (selected-term, ast)
-    
-  show-error-on-fail(s|title, message) =
-  	s <+ <show-dialog(|title, "ERROR")> message ; fail
+    <add-error-on-fail(not(eq)|"Invalid selection", "Please select a name")> (selected-term, ast)
 		  
 rules // Utility strategies				
 	add-elem: (new-elem, list) -> [new-elem | list]
 						  
 rules // external rules
 	external calc-name-cluster(|)
-    
+	
+rules // error handling 
+	add-error(|title, message) =
+	  rules(
+	    ErrorMessage :+ () -> (title, message)
+	  )
+	 
+	add-error-on-fail(s|title, message) =
+  	  s <+ add-error(|title, message); fail
+  	  
+	show-errors =
+		<ppdebug0> "show-errros";	 
+	  [(title, message) | _] := <bagof-ErrorMessage> ()
+	  ; <show-dialog(|title, "ERROR")> message 
+	  ; <ppdebug0> "show-errros-after"	 
+	  

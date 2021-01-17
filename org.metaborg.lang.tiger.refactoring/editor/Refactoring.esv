@@ -4,6 +4,6 @@ menus
 
   menu: "Refactoring" (openeditor) (realtime)
   
-    action: "Rename" = rename-action
+    action: "Rename" = rename-action-2
     action: "Rename DEBUG" = rename-action-debug
    

@@ -5,6 +5,7 @@ imports
 	nabl2/api
 	pp
 	libspoofax/stratego/debug
+	libspoofax/term/origin
 	libspoofax/ui/dialogs
 	
 	signatures/nabl2/shared/common/-
@@ -20,7 +21,7 @@ rules // menu action strategies
     	new-name := <read-new-name> path
 	    ; {| ErrorMessage: renamed-ast := <rename(|selected-term, new-name, path) <+ show-errors; !ast> ast |}
 	    ; filename := <compose-filename> path
-	    ; result := <pp-Tiger-string> renamed-ast
+	    ; (_, _, result) := <construct-textual-change> (ast, renamed-ast)
     
   rename-action-debug :
     (selected-term, _, ast, path, project-path) -> (filename, result)
@@ -43,7 +44,6 @@ rules // menu action strategies
     
     rename(|selected-term, new-name, path): ast -> renamed-ast
     where
-    	 
     	analysis := <nabl2-get-ast-analysis> ast
     	; check-selection(|selected-term, ast)
 	    ; selected-occ := <find-occurrence(|analysis)> selected-term
@@ -118,9 +118,17 @@ rules //Step 3: Rename terms
 
   rename-term(|target-indices, new-name): t -> new-name
 	where
+		<ppdebug0> ("rename-term: ", target-indices, new-name, t);
 		<is-string> t
 	 	; term-index := <nabl2-get-ast-index> t
-	  ; <elem> (term-index, target-indices)
+	 	; <ppdebug(|"term-indes: ")> term-index
+	    ; <elem> (term-index, target-indices)
+	    ;<ppdebug1> "do rename"
+	    ; new-name-term := <origin-set-relation> (t, new-name)
+	    ;<ppdebug(|"new-name-term")> new-name-term
+	    ; h := <has-origin-term> new-name-term
+	    ;<ppdebug1> h
+	    ; o := t
 	  
 rules //Step 4: Checking for capture
 	  
@@ -128,8 +136,6 @@ rules //Step 4: Checking for capture
 		(new-renamed-ast, new-analysis, _, _, _) := <nabl2-analyze-ast(|path)> renamed-ast
 		; old-resolution-relation := <qsort(dec-ref-pair-gt)> resolution-relation
 		; new-resolution-relation := <calc-resolution-relation; qsort(dec-ref-pair-gt)> new-analysis
-		; <ppdebug(|"old-resolution-relation: ")> old-resolution-relation
-		; <ppdebug(|"new-resolution-relation: ")> new-resolution-relation
 		; <add-error-on-fail(eq|"Capture detecte", "This renaming leads to name capture")> (old-resolution-relation, new-resolution-relation)
 															
 		dec-ref-pair-gt: ((ref-1, dec-1), (ref-2, dec-2)) -> <id>

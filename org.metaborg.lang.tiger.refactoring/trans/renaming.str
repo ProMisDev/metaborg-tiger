@@ -8,4 +8,4 @@ rules
 	rename-menu-action :
     	terms@(selected-term, _, ast, path, project-path) -> (filename, result)
     where
-    	(filename, result) := <rename-action(pp-Tiger-string|)> terms 
+    	(filename, result) := <rename-action(construct-textual-change|)> terms 

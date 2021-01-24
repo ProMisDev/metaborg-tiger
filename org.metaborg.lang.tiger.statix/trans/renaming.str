@@ -36,7 +36,9 @@ rules // Step 1: Calculate Resolution Relation
 
   calc-resolution-relation(|analysis): ast -> user-defined-relation
   where
-  	relation  := <collect(get-dec-ref-pair(|analysis))> ast
+  	ref-dec-pairs  := <collect(get-dec-ref-pair(|analysis))> ast
+  	; decs-reflexive-pairs := <map(make-dec-reflexive-pair)> ref-dec-pairs
+  	; relation := <conc;make-set> (decs-reflexive-pairs, ref-dec-pairs)
   	; user-defined-relation := <filter(is-not-built-in)> relation
   	
   get-dec-ref-pair(|analysis): ref -> (ref-index, dec-index)
@@ -49,6 +51,8 @@ rules // Step 1: Calculate Resolution Relation
   	  else
   	    dec-index := TermIndex(ref-path,0)
   	  end
+  	  
+  make-dec-reflexive-pair: (ref-index, dec-index) -> (dec-index, dec-index)  	  
   	
   is-not-built-in: (ref, dec@TermIndex(path, num-index)) -> <id>
   where

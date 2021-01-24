@@ -32,8 +32,29 @@ rules // menu action strategies
 		; renamed-ast := <rename-ast(|target-indices, new-name)> ast
 		; check-capture(|renamed-ast, resolution-relation, path)
 	    
-    
-rules // Step 1: Find occurrence in selection
+rules // Step 1: Calculate Resolution Relation
+
+  calc-resolution-relation(|analysis): ast -> user-defined-relation
+  where
+  	relation  := <collect(get-dec-ref-pair(|analysis))> ast
+  	; user-defined-relation := <filter(is-not-built-in)> relation
+  	
+  get-dec-ref-pair(|analysis): ref -> (ref-index, dec-index)
+  where
+  	<is-string> ref
+  	; dec := <stx--get-ast-property(|analysis, Ref())> ref
+  	; ref-index@TermIndex(ref-path, _) := <stx--get-ast-index> ref
+  	; if index := <stx--get-ast-index> dec then
+  		dec-index := index
+  	  else
+  	    dec-index := TermIndex(ref-path,0)
+  	  end
+  	
+  is-not-built-in: (ref, dec@TermIndex(path, num-index)) -> <id>
+  where
+  	<not(eq)> (num-index, 0)
+  	    
+rules // Step 2: Find occurrence in selection
 	
   find-occurrence(|resolution-relation): term -> occ
   where
@@ -56,28 +77,6 @@ rules // Step 1: Find occurrence in selection
   get-dec: (ref, dec) -> dec
   
   get-ref: (ref, dec) -> ref 
-
-rules // Step 2: Find all terms to rename
-
-  calc-resolution-relation(|analysis): ast -> user-defined-relation
-  where
-  	relation  := <collect(get-dec-ref-pair(|analysis))> ast
-  	; user-defined-relation := <filter(is-not-built-in)> relation
-  	
-  get-dec-ref-pair(|analysis): ref -> (ref-index, dec-index)
-  where
-  	<is-string> ref
-  	; dec := <stx--get-ast-property(|analysis, Ref())> ref
-  	; ref-index@TermIndex(ref-path, _) := <stx--get-ast-index> ref
-  	; if index := <stx--get-ast-index> dec then
-  		dec-index := index
-  	  else
-  	    dec-index := TermIndex(ref-path,0)
-  	  end
-  	
-  is-not-built-in: (ref, dec@TermIndex(path, num-index)) -> <id>
-  where
-  	<not(eq)> (num-index, 0)
 
 rules //Step 3: Rename terms	 	
 

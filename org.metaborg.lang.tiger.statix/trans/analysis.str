@@ -4,6 +4,7 @@ imports
 
   injections/-
   libspoofax/sdf/pp
+  libspoofax/term/origin
 
   statixruntime
   statix/api

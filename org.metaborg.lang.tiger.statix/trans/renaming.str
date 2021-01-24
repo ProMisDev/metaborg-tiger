@@ -7,7 +7,7 @@ imports
 	libspoofax/stratego/debug
 	libspoofax/ui/dialogs
 	libspoofax/sdf/pp
-
+	
 	libspoofax/term/annotation
   	libspoofax/term/origin
   
@@ -15,34 +15,14 @@ imports
   	
 rules // menu action strategies    
   rename-action:
-    (selected-term, _, ast, path, project-path) -> (filename, result)
+    (selected-term, _, ast, path, project-path) -> (path, result)
     where
     	analysis := <stx--get-ast-analysis> ast
     	; new-name := <read-new-name> path
-    	; renamed-ast := <rename(|selected-term, new-name, path)> ast
-    	; filename := <compose-filename> path 
+        ; {| ErrorMessage: renamed-ast := <rename(|selected-term, new-name, path) <+ show-errors; !ast> ast |}
+    	//; renamed-ast := <rename(|selected-term, new-name, path)> ast
 	    ; result := <pp-Tiger-string> renamed-ast
 	    
-  rename-action-debug :
-    (selected-term, _, ast, path, project-path) -> (filename, result)
-    where
-   		 <debug(!"ast 1 = ")> ast;
-    	analysis := <stx--get-ast-analysis> ast
-    	; check-selection(|selected-term, ast)
-    	; filename := <guarantee-extension(|"refactored.tig")> path
-    	; resolution-relation :=  <calc-resolution-relation(|analysis)> ast
-    	; <ppdebug(|"resolution-relation: ")> resolution-relation
-    	; occs := <get-all-occs> resolution-relation
-    	; <ppdebug(|"occs")> occs
-    	; selected-occ := <find-occurrence(|resolution-relation)> selected-term
-	    ; <ppdebug(|"selected-occ: ")> selected-occ
-	    ; target-indices := <calc-name-cluster> (selected-occ, resolution-relation)
-    	; <ppdebug(|"target-indices: ")> target-indices
-		; new-name := "bar"
-		; renamed-ast := <rename-ast(|target-indices, new-name)> ast
-	    ; <ppdebug(|"target-indices: ")> target-indices
-		; check-capture(|renamed-ast, resolution-relation, path)
-	    ; result := <pp-Tiger-string> renamed-ast
 	    
     rename(|selected-term, new-name, path): ast -> renamed-ast
     where
@@ -123,7 +103,7 @@ rules //Step 4: Checking for capture
 		; new-resolution-relation := <calc-resolution-relation(|new-analysis); qsort(dec-ref-pair-gt)> new-renamed-ast
 		; <ppdebug(|"old-resolution-relation: ")> old-resolution-relation
 		; <ppdebug(|"new-resolution-relation: ")> new-resolution-relation
-		; <show-error-on-fail(eq|"Capture detecte", "This renaming leads to name capture")> (old-resolution-relation, new-resolution-relation)
+		; <add-error-on-fail(eq|"Capture detecte", "This renaming leads to name capture")> (old-resolution-relation, new-resolution-relation)
 															
 	dec-ref-pair-gt: ((ref-1, dec-1), (ref-2, dec-2)) -> <id>
 	where
@@ -149,23 +129,25 @@ rules //Step 4: Checking for capture
       ; result := (ast'', a, error*, warning*, note*)
     
 rules // UI strategies
-
-	compose-filename: path -> filename
-	where
-		path-parts := <string-tokenize(|['.'])>
-		; file-extension := <last> path-parts
-		; new-file-extension := <conc-strings> ("refactored.", file-extension)
-		; filename := <guarantee-extension(|new-file-extension)> path
-	
 	read-new-name: _ -> new-name
 	where 	
    		new-name := <show-input-dialog(|"Rename", "")> "Enter a new name"
    
   check-selection(|selected-term, ast) =
-    <show-error-on-fail(not(eq)|"Invalid selection", "Please select a name")> (selected-term, ast)
-    
-  show-error-on-fail(s|title, message) =
-  	s <+ <show-dialog(|title, "ERROR")> message ; fail
+    <add-error-on-fail(not(eq)|"Invalid selection", "Please select a name")> (selected-term, ast)
+  	
+rules // error handling strategies 
+  add-error(|title, message) =
+    rules(
+      ErrorMessage :+ () -> (title, message)
+    )
+     
+  add-error-on-fail(s|title, message) =
+    s <+ add-error(|title, message); fail
+      
+  show-errors =    
+    [(title, message) | _] := <bagof-ErrorMessage> ()
+    ; <show-dialog(|title, "ERROR")> message      	
 		  
 rules // Utility strategies				
 	add-elem: (new-elem, list) -> [new-elem | list]
@@ -173,5 +155,4 @@ rules // Utility strategies
 rules // external rules
 	external calc-name-cluster(|)
 	
-	bloop: ast -> ast
     

@@ -62,25 +62,30 @@ rules // Step 2: Find occurrence in selection
   find-occurrence(|ast, resolution-relation): selected-term -> occ
   where
     check-selection(|selected-term, ast)
-  	; occs := <get-all-occs> resolution-relation
-	; occ := <collect-one(get-occurrence(|occs))> selected-term
+    ; occs := <get-all-occs> resolution-relation
+    ; occ := <add-error-on-fail(collect-one(get-occurrence(|occs))|"Renaming impossible", "The selected term cannot be renamed.")> selected-term
+    
   	
-  get-all-occs: resolution-relation -> occs
+  get-all-occs: resolution-relation -> all-occs
 	where
 	decs := <map(get-dec)> resolution-relation
     ; refs  := <map(get-ref)> resolution-relation
-    ; all-occs := <conc> (decs, refs)
-    ; occs := <nub> all-occs
-    
+    ; all-occs := <conc;nub> (decs, refs)
+    	
   get-occurrence(|occs): term -> occurrence
-	where
-		<is-string> term
-		; term-index := <stx--get-ast-index> term
-		; occurrence := <fetch-elem(?term-index)> occs
+  where
+    if (<is-list> term) then
+      <map(get-occurrence(|occs))> term
+    else
+      <is-string> term
+      ; term-index := <stx--get-ast-index> term
+      ; occurrence := <fetch-elem(?term-index)> occs
+    end		
     
   get-dec: (ref, dec) -> dec
   
   get-ref: (ref, dec) -> ref 
+    
 
 rules //Step 3: Rename terms	 	
 
@@ -120,9 +125,7 @@ rules //Step 4: Checking for capture
        ; level := <stx--log-level>
        ; c-name := <stx--mk-qualified-name(|spec-name)> init-constraint
     with
-      // <ppdebug(|"ast-pre:")> ast;
       ast' := <pre;stx--index-ast(|resource)> ast
-       ; <ppdebug(|"ast-post:")> ast'
       ; C := C(c-name, [<stx--explode> ast'], NoMessage())
       ; Solution(_, a) := <stx--solve-constraint(|spec, level)> C
       ; (error*, warning*, note*) := <stx--delays-as-errors;stx--extract-messages> a
@@ -149,9 +152,6 @@ rules // error handling strategies
   show-errors =    
     [(title, message) | _] := <bagof-ErrorMessage> ()
     ; <show-dialog(|title, "ERROR")> message      	
-		  
-rules // Utility strategies				
-	add-elem: (new-elem, list) -> [new-elem | list]
 						  
 rules // external rules
 	external calc-name-cluster(|)

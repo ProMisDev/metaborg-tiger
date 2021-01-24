@@ -25,9 +25,8 @@ rules // menu action strategies
     rename(|selected-term, new-name, path): ast -> renamed-ast
     where
     	analysis := <stx--get-ast-analysis> ast
-    	; check-selection(|selected-term, ast)
     	; resolution-relation :=  <calc-resolution-relation(|analysis)> ast
-    	; selected-occ := <find-occurrence(|resolution-relation)> selected-term
+    	; selected-occ := <find-occurrence(|ast, resolution-relation)> selected-term
 	    ; target-indices := <calc-name-cluster> (selected-occ, resolution-relation)
 		; renamed-ast := <rename-ast(|target-indices, new-name)> ast
 		; check-capture(|renamed-ast, resolution-relation, path)
@@ -60,10 +59,11 @@ rules // Step 1: Calculate Resolution Relation
   	    
 rules // Step 2: Find occurrence in selection
 	
-  find-occurrence(|resolution-relation): term -> occ
+  find-occurrence(|ast, resolution-relation): selected-term -> occ
   where
-  	occs := <get-all-occs> resolution-relation
-	; occ := <collect-one(get-occurrence(|occs))> term
+    check-selection(|selected-term, ast)
+  	; occs := <get-all-occs> resolution-relation
+	; occ := <collect-one(get-occurrence(|occs))> selected-term
   	
   get-all-occs: resolution-relation -> occs
 	where

@@ -17,11 +17,9 @@ rules // menu action strategies
   rename-action:
     (selected-term, _, ast, path, project-path) -> (path, result)
     where
-    	analysis := <stx--get-ast-analysis> ast
-    	; new-name := <read-new-name> path
+		new-name := <read-new-name> path
         ; {| ErrorMessage: renamed-ast := <rename(|selected-term, new-name, path) <+ show-errors; !ast> ast |}
-    	//; renamed-ast := <rename(|selected-term, new-name, path)> ast
-	    ; result := <pp-Tiger-string> renamed-ast
+	    ; (_, _, result) := <construct-textual-change> (ast, renamed-ast)
 	    
 	    
     rename(|selected-term, new-name, path): ast -> renamed-ast

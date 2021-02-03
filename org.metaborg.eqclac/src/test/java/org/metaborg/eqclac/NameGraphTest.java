@@ -213,6 +213,33 @@ class NameGraphTest {
 		assertTrue(cluster.contains(pair4.getReference()));
 
 	}
+	
+	@Test
+	void testMultipeClusterComplex2() {
+		ResolutionPair[] edges = new ResolutionPair[8];
+		
+		edges[0] = new ResolutionPair(new NameIndex(11,"foo"), new NameIndex(11,"foo"));
+		edges[1] = new ResolutionPair(new NameIndex(30,"foo"), new NameIndex(30,"foo"));
+		edges[2] = new ResolutionPair(new NameIndex(36,"foo"), new NameIndex(36,"foo"));
+		edges[3] = new ResolutionPair(new NameIndex(3,"foo"), new NameIndex(11,"foo"));
+		edges[4] = new ResolutionPair(new NameIndex(5,"foo"), new NameIndex(16,"foo"));
+		edges[5] = new ResolutionPair(new NameIndex(16,"foo"), new NameIndex(16,"foo"));
+		edges[6] = new ResolutionPair(new NameIndex(31,"foo"), new NameIndex(11,"foo"));
+		edges[7] = new ResolutionPair(new NameIndex(36,"foo"), new NameIndex(16,"foo"));
+		
+		//Build Graph
+		NameGraph graph = new NameGraph();
+		for(int i = 0; i < edges.length; i++) {
+			graph.addResolutionPair(edges[i]);
+		}
+		
+		NameIndex searchIndex = new NameIndex(5,"foo");
+		
+		//Test cluster 1
+		Set<NameIndex> cluster = graph.find(searchIndex).get();
+		assertFalse(cluster.isEmpty());
+	}
 
 
 }
+

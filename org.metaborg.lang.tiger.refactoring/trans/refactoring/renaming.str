@@ -13,24 +13,19 @@ imports
 
 rules // menu action strategies
   rename-action-2 :
-    (selected-term, _, ast, path, project-path) -> (filename, result)
+    (selected-term, _, ast, path, _) -> (path, result)
     where
-    	analysis := <nabl2-get-ast-analysis> ast;
-      <not(nabl2-analysis-has-errors)> analysis
-    with
-    	new-name := <read-new-name> path
-	    ; {| ErrorMessage: renamed-ast := <rename(|selected-term, new-name, path) <+ show-errors; !ast> ast |}
-	    ; filename := <compose-filename> path
-	    // ; (_, _, result) := <construct-textual-change> (ast, renamed-ast)
-	    ; result := <pp-Tiger-string> renamed-ast
+    	{| ErrorMessage:
+    	  new-name := <read-new-name> path
+	      ; renamed-ast := <rename(|selected-term, new-name, path)> ast
+	      ; (_, _, result) := <construct-textual-change> (ast, renamed-ast)
+        <+ show-errors |}	      
     
   rename-action-debug :
-    (selected-term, _, ast, path, project-path) -> (filename, result)
+    (selected-term, _, ast, path, _) -> (filename, result)
     where
-    	analysis := <nabl2-get-ast-analysis> ast
-      ; <not(nabl2-analysis-has-errors)> analysis
-    with
 	    check-selection(|selected-term, ast)
+	    ; analysis := <get-analysis> ast
 	    ; resolution-relation := <calc-resolution-relation> analysis
 	    ; selected-occ := <find-name-index(|ast, resolution-relation)> selected-term
 	    ; <ppdebug(|"selected-occ: ")> selected-occ
@@ -45,12 +40,19 @@ rules // menu action strategies
     
     rename(|selected-term, new-name, path): ast -> renamed-ast
     where
-        analysis := <nabl2-get-ast-analysis> ast
+        analysis := <get-analysis> ast
+        ; <not(nabl2-analysis-has-errors)> analysis
         ; res-rel := <calc-resolution-relation> analysis
 	    ; selected-index := <find-name-index(|ast, res-rel)> selected-term
 	    ; target-indices := <calc-name-cluster> (selected-index, res-rel)
 		; renamed-ast := <rename-ast(|target-indices, new-name)> ast
 	    ; check-capture(|renamed-ast, res-rel, path)  
+	    
+   get-analysis: ast -> analysis
+   where 
+     analysis := <nabl2-get-ast-analysis> ast
+     ; <not(nabl2-analysis-has-errors)> analysis
+       <+ add-error(|"Renaming impossible", "The program contains errors.")	    
 
 rules // Step 1: Find all terms to rename
   calc-resolution-relation: analysis -> user-defined-relation
@@ -83,11 +85,11 @@ rules // Step 2: Find occurrence index in selection
   where
     <check-selection(|term, ast)> ast
   	; occ-index := <collect-one(get-name-index(|res-rel))> term  
-  	  <+ add-error(|"Renaming impossible", "The selected term cannot be renamed."); fail
+  	  <+ add-error(|"Renaming impossible", "The selected term cannot be renamed.")
   	
   check-selection(|selected-term, ast) =
     <not(eq)> (selected-term, ast)
-  	<+ add-error(|"Invalid selection", "Please select a name"); fail
+  	<+ add-error(|"Invalid selection", "Please select a name")
     
 	get-name-index(|res-rel): term -> occurrence
 	where
@@ -110,7 +112,7 @@ rules //Step 3: Rename terms
 	rename-ast(|target-indices, new-name): ast -> renamed-ast
 	where
 		renamed-ast := <bottomup(try(rename-term(|target-indices, new-name)))> ast
-
+		
   rename-term(|target-indices, new-name): t -> new-name
 	where
 		<is-string> t
@@ -126,7 +128,7 @@ rules //Step 4: Checking for capture
 		; <ppdebug(|"old-resolution-relation: ")> old-res-rel
 		; <ppdebug(|"new-resolution-relation: ")> new-res-rel
 		; <eq>(old-res-rel, new-res-rel) 
-		  <+ add-error(|"Capture detected", "This renaming leads to name capture"); fail
+		  <+ add-error(|"Capture detected", "This renaming leads to name capture")
 															
 		res-pair-gt: ((ref-1, dec-1), (ref-2, dec-2)) -> <id>
 		where
@@ -160,7 +162,7 @@ rules // error handling
 	add-error(|title, message) =
 	  rules(
 	    ErrorMessage :+ () -> (title, message)
-	  )
+	  ); fail
 	 
 	add-error-on-fail(s|title, message) =
   	  s <+ add-error(|title, message); fail

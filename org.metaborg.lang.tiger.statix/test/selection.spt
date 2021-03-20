@@ -9,7 +9,7 @@ let
 in 
 	[[print]](msg)
 end
-]] run rename(|#1, "message", "test/variables.spt") fails
+]] run rename(|#1, "message", "test/variables.spt", "static-semantics", "programOk") fails
 
 test select literal  [[
 let
@@ -17,4 +17,4 @@ let
 in 
 	print(msg)
 end
-]] run rename(|#1, "message", "test/variables.spt") fails
+]] run rename(|#1, "message", "test/variables.spt", "static-semantics", "programOk") fails

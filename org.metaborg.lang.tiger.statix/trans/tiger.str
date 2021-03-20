@@ -15,3 +15,5 @@ rules // Debugging
     with
       filename := <guarantee-extension(|"aterm")> path
     ; result   := node
+    
+rename-menu-action : menu-terms -> <rename-action(construct-textual-change|)> menu-terms

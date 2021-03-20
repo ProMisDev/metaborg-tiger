@@ -27,8 +27,6 @@ rules
     where
       analysis := <get-analysis> ast
       ; resolution-relation :=  <calc-resolution-relation(|ast)> analysis
-      ; <ppdebug(|"resolution-relation")> resolution-relation
-      ; <ppdebug(|"selected-termn")> selected-term
       ; selected-index := <find-name-index(|ast, resolution-relation)> selected-term
       ; target-indices := <calc-name-cluster> (selected-index, resolution-relation)
       ; renamed-ast := <rename-ast(|target-indices, new-name)> ast
@@ -80,9 +78,7 @@ rules // Step 2: Find name index in selection
         <map(get-name-index(|res-rel))> term
       else
         <is-string> term
-        ; <ppdebug0> 0
         ; term-index := <stx--get-ast-index> term
-        ; <ppdebug(|"term-index")> term-index
         ; occurrence := <fetch-elem(res-pair-contains(|term-index))> res-rel
       end	
 			

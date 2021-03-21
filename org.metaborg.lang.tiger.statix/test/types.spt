@@ -13,7 +13,7 @@ let
 in
   	student1.name
 end
-]] run rename(|#1, "person", "test/types.spt", "static-semantics", "programOk") to [[
+]] run rename-test(|#1, "person", "test/types.spt") to [[
 let
 	type person = {
 		name : string, 
@@ -35,7 +35,7 @@ let
 in
   	student1.name
 end
-]] run rename(|#1, "fullName", "test/types.spt", "static-semantics", "programOk") to [[
+]] run rename-test(|#1, "fullName", "test/types.spt") to [[
 let
 	type student = {
 		fullName : string, 

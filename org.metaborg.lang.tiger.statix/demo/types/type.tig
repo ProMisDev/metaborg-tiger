@@ -4,11 +4,11 @@ student -> person
 */
 
 let
-	type person = {
+	type tops = {
 		name : string, 
     	age : int
   	}
-  	var student1: person := person{name = "Alan Turing", age = 107 }
+  	var student1: tops := tops{name = "Alan Turing", age = 107 }
 in
   	student1.name
 end

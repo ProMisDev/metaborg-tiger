@@ -13,24 +13,24 @@ imports
   statix/runtime/-
 
 rules     
-  rename-action(construct-textual-change | spec-name, init-constraint):
+  rename-action(construct-textual-change, analyze):
     (selected-term, _, ast, path, _) -> (path, result)
     where
       {| ErrorMessage:
         new-name := <read-new-name> path
-        ; renamed-ast := <rename(|selected-term, new-name, path, spec-name, init-constraint)> ast 
+        ; renamed-ast := <rename(analyze|selected-term, new-name, path)> ast 
         ; (_, _, result) := <construct-textual-change> (ast, renamed-ast)
       <+ show-errors |}      
 	    
 	    
-  rename(|selected-term, new-name, path, spec-name, init-constraint): ast -> renamed-ast
+  rename(analyze|selected-term, new-name, path): ast -> renamed-ast
     where
       analysis := <get-analysis> ast
       ; resolution-relation :=  <calc-resolution-relation(|ast)> analysis
       ; selected-index := <find-name-index(|ast, resolution-relation)> selected-term
       ; target-indices := <calc-name-cluster> (selected-index, resolution-relation)
       ; renamed-ast := <rename-ast(|target-indices, new-name)> ast
-      ; check-capture(|renamed-ast, resolution-relation, path, spec-name, init-constraint)
+      ; check-capture(analyze|renamed-ast, resolution-relation, path)
 	    
 rules // Step 1: Calculate Resolution Relation
 
@@ -100,12 +100,23 @@ rules //Step 4: Rename terms
 	  
 rules //Step 5: Checking for capture
 
-  check-capture(|renamed-ast, resolution-relation, path, spec-name, init-constraint) =
-    (new-renamed-ast, new-analysis) := <stx-analyze-ast(pre-analyze, post-analyze|spec-name, init-constraint)> (path, renamed-ast)
+  check-capture(analyze|renamed-ast, resolution-relation, path) =
+    (new-renamed-ast, new-analysis) := <rerun-analysis(analyze)> (path, renamed-ast)  
     ; new-resolution-relation := <calc-resolution-relation(|new-renamed-ast); qsort(res-pair-gt)> new-analysis
     ; old-resolution-relation := <qsort(res-pair-gt)> resolution-relation
     ; <eq>(old-resolution-relation, new-resolution-relation) 
       <+ add-error(|"Capture detected", "This renaming leads to name capture")
+      
+  rerun-analysis(analyze): (path, renamed-ast) -> (new-ast, new-analysis)
+    where
+      input := <make-analysis-input> (path, renamed-ast)
+      ; AnalysisResult(analyses) := <analyze> input
+      ; (_, Full(new-ast, FileAnalysis(_, new-analysis), _, _,_)) := <fetch-elem(?(path, _))> analyses
+      
+  make-analysis-input: (path, renamed-ast) -> AnalyzeSingle([(path, change)], (), ())
+    where
+      old-analysis := <stx--get-ast-analysis> renamed-ast
+      ; change := Added(renamed-ast)
 															
   res-pair-gt: ((ref-1, dec-1), (ref-2, dec-2)) -> <id>
     where
@@ -114,16 +125,6 @@ rules //Step 5: Checking for capture
   term-index-gt: (TermIndex(path-1, num-index-1), TermIndex(path-2, num-index-2)) -> <id>
     where 
       <string-gt> (path-1, path-2) <+ <gt> (num-index-1, num-index-2)
-
-  stx-analyze-ast(pre, post|spec-name, init-constraint): (resource, ast) -> (post-ast, analysis)
-    with 
-      spec  := <stx--language-spec-by-name> spec-name
-      ; level := <stx--log-level>
-      ; c-name := <stx--mk-qualified-name(|spec-name)> init-constraint
-      ; pre-ast := <pre;stx--index-ast(|resource)> ast
-      ; C := C(c-name, [<stx--explode> pre-ast], NoMessage())
-      ; Solution(_, analysis) := <stx--solve-constraint(|spec, level)> C
-      ; post-ast := <post> pre-ast
     
 rules // Utility strategies
   read-new-name: _ -> new-name

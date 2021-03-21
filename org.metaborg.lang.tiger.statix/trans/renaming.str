@@ -32,35 +32,26 @@ rules
       ; check-capture(analyze|renamed-ast, resolution-relation, path)
 	    
 rules // Step 1: Calculate Resolution Relation
-  calc-resolution-relation(|ast): analysis -> user-defined-relation
-  where
-  	ref-dec-pairs  := <collect(get-dec-ref-pair(|analysis))> ast
-  	; decs-reflexive-pairs := <collect(get-dec-reflexive-pair(|analysis))> ast
-  	; relation := <conc;make-set> (decs-reflexive-pairs, ref-dec-pairs)
-  	; user-defined-relation := <filter(is-not-built-in)> relation
+  calc-resolution-relation(|ast): analysis -> relation
+    where
+  	  relation := <collect(get-dec-ref-pair(|analysis) <+ get-dec-reflexive-pair(|analysis))> ast
   	
-  get-dec-ref-pair(|analysis): ref -> (ref-index, dec-index)
-  where
-  	<is-string> ref
-  	; dec := <stx--get-ast-property(|analysis, Ref())> ref
-  	; ref-index@TermIndex(ref-path, _) := <stx--get-ast-index> ref
-  	; if index := <stx--get-ast-index> dec then
-  		dec-index := index
-  	  else
-  	    dec-index := TermIndex(ref-path,0)
-  	  end
-  	  
+  get-dec-ref-pair(|analysis): t -> (ref-index, dec-index)
+    where
+  	  <is-string> t
+  	  ; dec := <stx--get-ast-property(|analysis, Ref())> t
+  	  ; ref-index := <stx--get-ast-index> t
+  	  ; dec-index := <stx--get-ast-index> dec
+
   get-dec-reflexive-pair(|analysis): t -> (dec-index, dec-index)
-  where
-  	<is-string> t
-  	; dec := <stx--get-ast-property(|analysis, Prop("decl"))> 
-  	; dec-index := <stx--get-ast-index> dec
-  	  
-  make-dec-reflexive-pair: (ref-index, dec-index) -> (dec-index, dec-index)  	  
-  	
-  is-not-built-in: (ref, dec@TermIndex(path, num-index)) -> <id>
-  where
-  	<not(eq)> (num-index, 0)
+    where
+  	  <is-string> t
+  	  ; dec := <stx--get-ast-property(|analysis, Prop("decl"))> 
+  	  ; dec-index := <stx--get-ast-index> dec
+
+  is-user-defined: (ref, dec@TermIndex(path, num-index)) -> <id>
+    where
+      <not(eq)> (num-index, 0)
   	    
 rules // Step 2: Find name index in selection
   find-name-index(|ast, res-rel): term -> occ-index

@@ -22,7 +22,6 @@ rules
         ; (_, _, result) := <construct-textual-change> (ast, renamed-ast)
       <+ show-errors |}      
 	    
-	    
   rename(analyze|selected-term, new-name, path): ast -> renamed-ast
     where
       analysis := <get-analysis> ast
@@ -33,7 +32,6 @@ rules
       ; check-capture(analyze|renamed-ast, resolution-relation, path)
 	    
 rules // Step 1: Calculate Resolution Relation
-
   calc-resolution-relation(|ast): analysis -> user-defined-relation
   where
   	ref-dec-pairs  := <collect(get-dec-ref-pair(|analysis))> ast
@@ -65,7 +63,6 @@ rules // Step 1: Calculate Resolution Relation
   	<not(eq)> (num-index, 0)
   	    
 rules // Step 2: Find name index in selection
-	  
   find-name-index(|ast, res-rel): term -> occ-index
     where
       <check-selection(|term, ast)> ast
@@ -87,7 +84,6 @@ rules // Step 2: Find name index in selection
       <eq> (term-index, ref-index) <+ <eq> (term-index, dec-index)   
 
 rules //Step 4: Rename terms	 	
-
   rename-ast(|target-indices, new-name): ast -> renamed-ast
     where
       renamed-ast := <bottomup(try(rename-term(|target-indices, new-name)))> ast
@@ -99,7 +95,6 @@ rules //Step 4: Rename terms
       ; <elem> (term-index, target-indices)
 	  
 rules //Step 5: Checking for capture
-
   check-capture(analyze|renamed-ast, resolution-relation, path) =
     (new-renamed-ast, new-analysis) := <rerun-analysis(analyze)> (path, renamed-ast)  
     ; new-resolution-relation := <calc-resolution-relation(|new-renamed-ast); qsort(res-pair-gt)> new-analysis
@@ -116,7 +111,7 @@ rules //Step 5: Checking for capture
   make-analysis-input: (path, renamed-ast) -> AnalyzeSingle([(path, change)], (), ())
     where
       old-analysis := <stx--get-ast-analysis> renamed-ast
-      ; change := Added(renamed-ast)
+      ; change := Changed(renamed-ast,old-analysis)
 															
   res-pair-gt: ((ref-1, dec-1), (ref-2, dec-2)) -> <id>
     where

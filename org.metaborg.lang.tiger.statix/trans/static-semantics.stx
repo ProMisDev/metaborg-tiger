@@ -60,6 +60,7 @@ rules // type binding
 
   declareType(s, x, T) :-
     s -> Type{x} with typeOfDecl T,
+    @x.decl := x,
     // declaration is distinct
     typeOfDecl of Type{x} in s |-> [(_, (_, T))].
 
@@ -67,6 +68,7 @@ rules // type binding
 
   declareVar(s, x, T) :-
     s -> Var{x} with typeOfDecl T,
+    @x.decl := x,
     // declaration is distinct
     typeOfDecl of Var{x} in s |-> [(_, (_, T))].
 
@@ -77,6 +79,7 @@ rules // type binding
 
   declareTypeRaw(s, x, T) :-
     s -> Type{x} with typeOfDecl T,
+    @x.decl := x,
     typeOfDecl of Type{x} in s |-> [(_, (_, T))].
     // declaration is distinct
 
@@ -91,6 +94,7 @@ rules // variable binding
 
   declareVarRaw(s, x, T) :-
     s -> Var{x} with typeOfDecl T,
+    @x.decl := x,
     // declaration is distinct
     typeOfDecl of Var{x} in s |-> [(_, (_, T))].
 
@@ -105,6 +109,7 @@ rules // field binding
 
   declareField(s, x, T) :-
     s -> Field{x} with typeOfDecl T,
+    @x.decl := x,
     // declaration is distinct
     typeOfDecl of Field{x} in s |-> [(_, (_, T))].
 

@@ -8,7 +8,7 @@ let
 in 
 	print([[msg]])
 end
-]] run rename-test(|#1, "message", "test/variables.spt") to [[
+]] run rename-test(|#1, "message") to [[
 let
 	var message := "Hello World"
 in 
@@ -24,7 +24,7 @@ in
 	print([[msg]])
 end
 
-]] run rename-test(|#1, "message", "test/variables.spt") to [[
+]] run rename-test(|#1, "message") to [[
 let
 	var message : string := "Hello World"
 in 

@@ -9,7 +9,7 @@ let
 in 
 	[[print]](msg)
 end
-]] run rename-test(|#1, "message", "test/selection.spt") fails
+]] run rename-test(|#1, "message") fails
 
 test select literal  [[
 let
@@ -17,7 +17,7 @@ let
 in 
 	print(msg)
 end
-]] run rename-test(|#1, "message", "test/selection.spt") fails
+]] run rename-test(|#1, "message") fails
 
 test select dec without any refs  [[
 let
@@ -25,7 +25,7 @@ let
 in 
 	
 end
-]] run rename-test(|#1, "message", "test/selection.spt") to [[
+]] run rename-test(|#1, "message") to [[
 let
 	var message := "Hello World"
 in 

@@ -12,7 +12,7 @@ in
     bar + foo
   end
 end
-]] run rename-test(| #1, "foo", "test/capture.spt") fails
+]] run rename-test(| #1, "foo") fails
 
 
 test rename argument with capture [[
@@ -29,5 +29,5 @@ let
 in
    	plus(1,1)
 end
-]] run rename-test(|#1, "a", "test/capture.spt") fails
+]] run rename-test(|#1, "a") fails
 

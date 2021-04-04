@@ -136,10 +136,7 @@ rules // Utility strategies
       
   show-errors =    
     [(title, message) | _] := <bagof-ErrorMessage> ()
-    ; <show-dialog(|title, "ERROR")> message   
-     
-  add-error-on-fail(s|title, message) =
-    s <+ add-error(|title, message); fail
+    ; <show-dialog(|title, "ERROR")> message
     
 rules // external rules
   external calc-name-cluster(|)

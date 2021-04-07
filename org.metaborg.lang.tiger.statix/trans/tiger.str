@@ -6,7 +6,6 @@ imports
   pp
   outline
   analysis
-  renaming
 
 rules // Debugging
 

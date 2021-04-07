@@ -49,3 +49,10 @@ rules // Debugging
   debug-show-analyzed: (_, _, ast, path, project-path) -> (filename, result)
     with filename := <guarantee-extension(|"analyzed.aterm")> path
        ; result   := ast
+       
+rules // Renaming
+  rename-menu-action : menu-terms -> <rename-action(construct-textual-change, editor-analyze, id)> menu-terms  
+  
+  rename-test(|selected-term, new-name) = rename(editor-analyze, id|selected-term, new-name);get-ast  
+
+  get-ast: [(_, _, ast) | _] -> ast       

@@ -1,6 +1,6 @@
 module foo-challenge
 
-language TigerRefactoring
+language Tiger
 
 test Foo Challenge [[
 let

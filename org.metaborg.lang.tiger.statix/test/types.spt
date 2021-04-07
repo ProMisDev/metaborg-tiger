@@ -1,6 +1,6 @@
 module renaming-types
 
-language TigerRefactoring
+language Tiger
 
 
 test rename type [[

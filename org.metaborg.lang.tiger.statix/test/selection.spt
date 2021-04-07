@@ -1,6 +1,6 @@
 module renaming-variables
 
-language TigerRefactoring
+language Tiger
 
 
 test select builtin entity  [[

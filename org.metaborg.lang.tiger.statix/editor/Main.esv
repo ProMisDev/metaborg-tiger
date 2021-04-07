@@ -11,4 +11,3 @@ language
   extensions : tig
 
   provider : target/metaborg/stratego.jar
-  provider : trans/renaming.jar

@@ -17,7 +17,7 @@ let
 in
   	foo(foo{foo = "foo"})
 end
-]] run rename(|#1, "bar", "test/foo-challenge.spt") to [[
+]] run rename-test(|#1, "bar") to [[
 let
   type bar = {
 		foo : string

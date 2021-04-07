@@ -11,7 +11,7 @@ let
 in
    	plus(1,1)
 end
-]] run rename(|#1, "add", "test/functions.spt") to [[
+]] run rename-test(|#1, "add") to [[
 let 
 	function add(a : int, b:int) : int = (
 		a + b
@@ -29,7 +29,7 @@ let
 in
    	[[plus]](1,1)
 end
-]] run rename(|#1, "add", "test/functions.spt") to [[
+]] run rename-test(|#1, "add") to [[
 let 
 	function add(a : int, b:int) : int = (
 		a + b
@@ -48,7 +48,7 @@ let
 in
    	printnl("Hello World")
 end
-]] run rename(|#1, "printNewLine", "test/functions.spt") to [[
+]] run rename-test(|#1, "printNewLine") to [[
 let 
 	function printNewLine(x : string) = (
 		print(x); 
@@ -68,7 +68,7 @@ let
 in
    	printnl("Hello World")
 end
-]] run rename(|#1, "text", "test/functions.spt") to [[
+]] run rename-test(|#1, "text") to [[
 let 
 	function printnl(text : string) = (
 		print(text); 

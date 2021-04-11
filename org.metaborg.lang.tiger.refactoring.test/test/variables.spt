@@ -5,30 +5,30 @@ language TigerRefactoring
 
 test rename variable without type [[
 let
-	var msg := "Hello World"
-in 
-	print([[msg]])
+  var msg := "Hello World"
+in
+  print([[msg]])
 end
-]] run rename(|#1, "message", "test/variables.spt") to [[
+]] run rename-test(|#1, "message") to [[
 let
-	var message := "Hello World"
-in 
-	print(message)
+  var message := "Hello World"
+in
+  print(message)
 end
 ]]
 
 test rename variable with type [[
 let
-	var msg : string := "Hello World"
-in 
-	print([[msg]])
+  var msg : string := "Hello World"
+in
+  print([[msg]])
 end
 
-]] run rename(|#1, "message", "test/variables.spt") to [[
+]] run rename-test(|#1, "message") to [[
 let
-	var message : string := "Hello World"
-in 
-	print(message)
+  var message : string := "Hello World"
+in
+  print(message)
 end
 
 ]]

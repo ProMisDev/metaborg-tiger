@@ -2,7 +2,12 @@ module renaming
 
 imports
  nabl2/runtime
+ analysis
  pp
 
 rules
-	rename-menu-action : menu-terms -> <rename-action(construct-textual-change|)> menu-terms
+	rename-menu-action : menu-terms -> <rename-action(construct-textual-change, editor-analyze, fail|)> menu-terms
+	
+    rename-test(|selected-term, new-name) = rename(editor-analyze, fail|selected-term, new-name);get-ast  
+
+    get-ast: [(_, _, ast) | _] -> ast

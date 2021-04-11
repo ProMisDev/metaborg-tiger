@@ -5,44 +5,44 @@ language TigerRefactoring
 
 test rename type [[
 let
-	type [[student]] = {
-		name : string, 
-    	age : int
-  	}
-  	var student1: student := student{name = "Alan Turing", age = 107 }
+  type [[student]] = {
+    name : string,
+      age : int
+    }
+    var student1: student := student{name = "Alan Turing", age = 107 }
 in
-  	student1.name
+    student1.name
 end
-]] run rename(|#1, "person", "test/types.spt") to [[
+]] run rename-test(|#1, "person") to [[
 let
-	type person = {
-		name : string, 
-    	age : int
-  	}
-  	var student1: person := person{name = "Alan Turing", age = 107 }
+  type person = {
+    name : string,
+      age : int
+    }
+    var student1: person := person{name = "Alan Turing", age = 107 }
 in
-  	student1.name
+    student1.name
 end
 ]]
 
 test rename field [[
 let
-	type student = {
-		[[name]] : string, 
-    	age : int
-  	}
-  	var student1: student := student{name = "Alan Turing", age = 109 }
+  type student = {
+    [[name]] : string,
+      age : int
+    }
+    var student1: student := student{name = "Alan Turing", age = 109 }
 in
-  	student1.name
+    student1.name
 end
-]] run rename(|#1, "fullName", "test/types.spt") to [[
+]] run rename-test(|#1, "fullName") to [[
 let
-	type student = {
-		fullName : string, 
-    	age : int
-  	}
-  	var student1: student := student{fullName = "Alan Turing", age = 109 }
+  type student = {
+    fullName : string,
+      age : int
+    }
+    var student1: student := student{fullName = "Alan Turing", age = 109 }
 in
-  	student1.fullName
+    student1.fullName
 end
 ]]

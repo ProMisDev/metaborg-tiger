@@ -5,16 +5,16 @@ language TigerRefactoring
 
 test select builtin entity  [[
 let
-	var msg := "Hello World"
-in 
-	[[print]](msg)
+  var msg := "Hello World"
+in
+  [[print]](msg)
 end
-]] run rename(|#1, "message", "test/variables.spt") fails
+]] run rename-test(|#1, "message") fails
 
 test select literal  [[
 let
-	var msg := [["Hello World"]]
-in 
-	print(msg)
+  var msg := [["Hello World"]]
+in
+  print(msg)
 end
-]] run rename(|#1, "message", "test/variables.spt") fails
+]] run rename-test(|#1, "message") fails

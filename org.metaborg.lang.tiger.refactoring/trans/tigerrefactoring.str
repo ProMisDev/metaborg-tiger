@@ -1,7 +1,7 @@
 module tigerrefactoring
 
 imports
-  
+
   completion/completion
   pp
   outline
@@ -14,9 +14,16 @@ imports
   nabl2/runtime/prelude/-
   nabl2/runtime/pp
   nabl2/api
-  
+
+rules // Renaming
+  rename-menu-action : menu-terms -> <rename-action-2(construct-textual-change, editor-analyze, fail)> menu-terms
+
+  rename-test(|selected-term, new-name) = rename-2(editor-analyze, fail|selected-term, new-name);get-ast
+
+  get-ast: [(_, _, ast) | _] -> ast
+
 rules // Debugging
-  
+
   debug-show-aterm:
     (node, _, _, path, project-path) -> (filename, result)
     with
@@ -24,23 +31,22 @@ rules // Debugging
     ; result   := node
 
 rules // Desugaring
-  
+
   editor-desugar :
     (node, _, _, path, project-path) -> (filename, result)
     with
       filename := <guarantee-extension(|"des.tig")> path
     ; result   := <desugar-all; pp-Tiger-string>node
-    
+
   editor-desugar-ast :
     (node, _, _, path, project-path) -> (filename, result)
     with
       filename := <guarantee-extension(|"aterm")> path
     ; result   := <desugar-all>node
-  
+
   editor-show-analysis-term:
     (ast, _, _, path, project-path) -> (filename, result)
     where
       filename := <guarantee-extension(|"sg")> path;
       analysis := <nabl2-get-resource-analysis> $[[project-path]/[path]];
       result := <nabl2--debug-scope-graph(|analysis)>
-      

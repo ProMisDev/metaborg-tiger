@@ -4,4 +4,4 @@ menus
 
   menu: "Refactoring"
 
-    action: "Rename" = rename-menu-action-2
+    action: "Rename" = rename-menu-action

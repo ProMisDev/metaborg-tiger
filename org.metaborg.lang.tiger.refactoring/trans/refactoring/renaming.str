@@ -71,9 +71,7 @@ rules // Step 1: Find all terms to rename
     where
       <not(eq)> (num-index, 0)
 
-  get-term-index-from-occ: Occurrence(_, name, _) -> term-index
-    where
-      term-index := <nabl2-get-ast-index> name
+  get-term-index-from-occ: Occurrence(_, _, term-index) -> term-index
 
 rules // Step 2: Find occurrence index in selection
   find-name-index-2(|ast, res-rel): term -> occ-index

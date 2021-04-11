@@ -6,8 +6,8 @@ imports
  pp
 
 rules
-	rename-menu-action : menu-terms -> <rename-action(construct-textual-change, editor-analyze, fail|)> menu-terms
+	rename-menu-action : menu-terms -> <nabl2-rename-action(construct-textual-change, editor-analyze, fail|)> menu-terms
 	
-    rename-test(|selected-term, new-name) = rename(editor-analyze, fail|selected-term, new-name);get-ast  
+    rename-test(|selected-term, new-name) = nabl2-rename(editor-analyze, fail|selected-term, new-name);get-ast  
 
     get-ast: [(_, _, ast) | _] -> ast

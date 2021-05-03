@@ -23,17 +23,19 @@ rules // menu action strategies
         <+ show-errors |}
 
     rename-2(analyze, multi|selected-term, new-name): selected-ast -> renamed-asts
-    where
-        asts := <get-analysed-asts>
-        ; analysis := <get-project-analysis>
+    with
+        asts := <get-analysed-asts(multi)> selected-ast
+        ; analysis := <get-project-analysis(multi)> selected-ast
         ; res-rel := <calc-resolution-relation-2> analysis
+        ; <ppdebug(|"res-rel: ")> res-rel
       ; selected-index := <find-name-index-2(|selected-ast, res-rel)> selected-term
       ; <ppdebug(|"selected-index: ")> selected-index
       ; (target-paths, target-indices) := <find-rename-target> (selected-index, res-rel)
       ; <ppdebug(|"target-indices: ")> target-indices
       ; <ppdebug(|"target-paths: ")> target-paths
       ; renamed-asts := <rename-asts(|target-indices, target-paths, new-name)> asts
-      ; check-capture(analyze, multi|renamed-asts, res-rel)
+      ; <ppdebug(|"renamed-asts: ")> renamed-asts
+      ; check-capture-2(analyze, multi|renamed-asts, res-rel)
 
    get-analysis: ast -> analysis
    where
@@ -137,7 +139,7 @@ rules //Step 4: Rename terms
       ; <elem> (term-index, target-indices)
 
 rules //Step 5: Checking for capture
-check-capture(analyze, multi|renamed-asts, resolution-relation) =
+check-capture-2(analyze, multi|renamed-asts, resolution-relation) =
     new-analysis := <rerun-analysis(analyze, multi)> renamed-asts
     ; new-resolution-relation := <calc-resolution-relation-2; qsort(res-pair-gt)> new-analysis
     ; <ppdebug(|"new-resolution-relation: ")> new-resolution-relation
@@ -147,17 +149,19 @@ check-capture(analyze, multi|renamed-asts, resolution-relation) =
       <+ add-error(|"Capture detected", "This renaming leads to name capture")
 
   rerun-analysis(analyze, multi): renamed-asts -> new-analysis
-    where
+    with
       if multi then
         new-analysis := <rerun-analysis-multi(analyze)> renamed-asts
       else
-        new-analysis := <rerun-analysis-single(analyze)> renamed-asts
+        new-analysis := <rerun-analysis-single-2(analyze)> renamed-asts
       end
 
-  rerun-analysis-single(analyze): [(path, _,  renamed-ast)] -> new-analysis
+  rerun-analysis-single-2(analyze): [(path, _,  renamed-ast)] -> new-analysis
     where
       input := <make-analysis-input-single> (path, renamed-ast)
+      ; <ppdebug(|"input: ")> input
       ; AnalysisResult(analyses) := <analyze> input
+      ; <ppdebug(|"analysis-result: ")> analyses
       ; (_, Full(_, CompatUnitAnalysis(_, new-analysis), _, _,_)) := <fetch-elem(?(path, _))> analyses
 
   make-analysis-input-single: (path, renamed-ast) -> AnalyzeSingle([(path, change)], (), ())
@@ -235,11 +239,14 @@ rules // UI strategies
 rules // Utility strategies
   add-elem: (new-elem, list) -> [new-elem | list]
 
-  get-project-analysis: _ -> analysis-object
+  get-project-analysis(multi): ast -> analysis
     where
       project-analyses := <get-project-constraint-analyses>
-      ; analysis := <get-project-entry <+ get-single-file-entry> project-analyses
-      ; analysis-object := <get-analysis-object> analysis
+      ; if multi then
+          analysis := <get-project-entry;get-analysis-object> project-analyses
+        else
+          analysis := <nabl2-get-ast-analysis> ast
+        end  
 
   get-project-entry: entries -> project-analysis
     where
@@ -257,10 +264,23 @@ rules // Utility strategies
 
   get-analysis-object: CompatUnitAnalysis(_, analysis-object) -> analysis-object
 
-  get-analysed-asts: _ -> asts
+  get-analysed-asts(multi): selected-ast -> asts
+    where
+      if multi then
+        asts := <get-analysed-asts-multi>
+      else
+        asts := <get-analysed-asts-single> selected-ast
+      end
+      
+      
+  get-analysed-asts-multi: _ -> asts
     where
       project-asts := <get-project-analyzed-asts>
-      ; asts := <filter(not(is-project-entry))> project-asts
+      ; asts := <filter(not(is-project-entry))> project-asts   
+      
+  get-analysed-asts-single: selected-ast -> [(path, selected-ast)]
+    where
+      TermIndex(path,_) := <nabl2-get-ast-index> selected-ast
 
 
 rules // external rules

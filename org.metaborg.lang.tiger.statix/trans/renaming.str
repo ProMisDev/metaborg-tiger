@@ -29,8 +29,8 @@ rules
       
   rename(analyze, multi|selected-term, new-name): selected-ast -> renamed-asts
     where
-      asts := <get-analysed-asts> 
-      ; analysis := <get-project-analysis>
+      asts := <get-analysed-asts(multi)> selected-ast 
+      ; analysis := <get-project-analysis(multi)> selected-ast
       ; resolution-relation :=  <calc-resolution-relation-project(|analysis)> asts
       ; <ppdebug(|"resolution-relation:")> resolution-relation
       ; selected-index := <find-name-index(|selected-ast, resolution-relation)> selected-term
@@ -216,14 +216,14 @@ rules // Utility strategies
     where 	
       new-name := <show-input-dialog(|"Rename", "")> "Enter a new name"
       
-  get-project-analysis: _ -> analysis-object
-    where 	
+  get-project-analysis(multi): ast -> analysis
+    where
       project-analyses := <get-project-constraint-analyses>
-      ; <ppdebug(|"project-analyses: ")> project-analyses
-      ; analysis := <get-project-entry <+ get-single-file-entry> project-analyses
-      ; analysis-object := <get-analysis-object> analysis
-      //; <not(stx-analysis-has-errors)> analysis-object
-//        <+ add-error(|"Renaming impossible", "The program contains errors.") 	
+      ; if multi then
+          analysis := <get-project-entry;get-analysis-object> project-analyses
+        else
+          analysis := <stx--get-ast-analysis> ast
+        end
       
   get-project-entry: entries -> project-analysis
     where
@@ -241,10 +241,22 @@ rules // Utility strategies
   
   get-analysis-object: FileAnalysis(_, analysis-object) -> analysis-object
       
-  get-analysed-asts: _ -> asts
+  get-analysed-asts(multi): selected-ast -> asts
+    where
+      if multi then
+        asts := <get-analysed-asts-multi>
+      else
+        asts := <get-analysed-asts-single> selected-ast
+      end
+
+  get-analysed-asts-multi: _ -> asts
     where
       project-asts := <get-project-analyzed-asts>
-      ; asts := <filter(not(is-project-entry))> project-asts	       
+      ; asts := <filter(not(is-project-entry))> project-asts   
+
+  get-analysed-asts-single: selected-ast -> [(path, selected-ast)]
+    where
+      TermIndex(path,_) := <stx--get-ast-index> selected-ast                	       
 
   check-selection(|selected-term, ast) =
     <not(eq)> (selected-term, ast)
